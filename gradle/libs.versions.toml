@@ -1,0 +1,10 @@
+[versions]
+agp = "8.13.2"
+kotlin = "2.3.0"
+
+[libraries]
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+maven-publish = { id = "maven-publish" }
