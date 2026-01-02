@@ -40,6 +40,7 @@ kotlin {
 }
 
 dependencies {
+    testImplementation(libs.kotlin.test)
 }
 
 publishing {
