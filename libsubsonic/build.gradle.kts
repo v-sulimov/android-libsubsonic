@@ -40,6 +40,11 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.httpclient)
+
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.json)
 }
 
 publishing {
