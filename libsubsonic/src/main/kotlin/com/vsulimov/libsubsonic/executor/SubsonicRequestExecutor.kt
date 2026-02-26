@@ -7,6 +7,7 @@ import com.vsulimov.libsubsonic.data.result.SubsonicResult
 import com.vsulimov.libsubsonic.data.result.error.SubsonicError
 import com.vsulimov.libsubsonic.parser.SubsonicResponseParser
 import com.vsulimov.libsubsonic.url.SubsonicUrlBuilder
+import java.io.InputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -27,6 +28,58 @@ internal class SubsonicRequestExecutor(
 ) {
 
     private val httpClient = HttpClient()
+
+    /**
+     * Executes a streaming GET request against the Subsonic API.
+     *
+     * This method is main-safe. It suspends execution and performs blocking network I/O
+     * on [Dispatchers.IO]. The [responseHandler] receives the raw response body as an
+     * [InputStream] for direct consumption.
+     *
+     * @param endpoint The API endpoint to call (e.g., "stream.view").
+     * @param params Optional single-value query parameters to append to the request.
+     * @param responseHandler A lambda that consumes the [InputStream] response body.
+     * @return A [SubsonicResult] representing success or failure.
+     */
+    suspend fun executeStreaming(
+        endpoint: String,
+        params: Map<String, String> = emptyMap(),
+        responseHandler: (InputStream) -> Unit
+    ): SubsonicResult<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val url = urlBuilder.buildUrl(endpoint, params)
+            val request = GetRequest(url)
+            val networkResult = httpClient.executeStreamingGetRequest(request) { response ->
+                responseHandler(response.body)
+            }
+
+            networkResult.fold(
+                onSuccess = { SubsonicResult.Success(Unit) },
+                onFailure = { exception ->
+                    SubsonicResult.Failure(
+                        SubsonicError(
+                            code = DEFAULT_ERROR_CODE,
+                            message = exception.message ?: "Network transport error"
+                        )
+                    )
+                }
+            )
+        } catch (e: IllegalStateException) {
+            SubsonicResult.Failure(
+                SubsonicError(
+                    code = DEFAULT_ERROR_CODE,
+                    message = e.message ?: "Configuration error"
+                )
+            )
+        } catch (e: Exception) {
+            SubsonicResult.Failure(
+                SubsonicError(
+                    code = DEFAULT_ERROR_CODE,
+                    message = e.message ?: "Unexpected client error"
+                )
+            )
+        }
+    }
 
     /**
      * Executes a GET request against the Subsonic API.

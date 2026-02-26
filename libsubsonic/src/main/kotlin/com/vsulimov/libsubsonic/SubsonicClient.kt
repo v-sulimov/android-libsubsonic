@@ -58,6 +58,7 @@ import com.vsulimov.libsubsonic.parser.system.PingParser
 import com.vsulimov.libsubsonic.parser.video.GetVideoInfoParser
 import com.vsulimov.libsubsonic.parser.video.GetVideosParser
 import com.vsulimov.libsubsonic.url.SubsonicUrlBuilder
+import java.io.InputStream
 
 /**
  * Entry point for the Subsonic REST API client.
@@ -590,5 +591,42 @@ class SubsonicClient(baseUrl: String, clientName: String = DEFAULT_CLIENT_NAME) 
         return executor.execute("deletePlaylist.view", params) { jsonObject ->
             DeletePlaylistParser.parse(jsonObject)
         }
+    }
+
+    /**
+     * Streams a media file from the Subsonic server.
+     *
+     * The [responseHandler] lambda receives the raw audio or video data as an [InputStream].
+     * The caller is responsible for reading and closing the stream within the lambda.
+     *
+     * @param id The unique identifier of the file to stream.
+     * @param maxBitRate If set, limits the stream bitrate to this value in kilobits per second.
+     * @param format The preferred target format (e.g. "mp3", "flac").
+     * @param timeOffset Only applicable to video. Specifies where to start streaming, in seconds.
+     * @param size Only applicable to video. The requested video size (e.g. "640x480").
+     * @param estimateContentLength Only applicable to video. Whether the server should estimate the content length.
+     * @param converted Navidrome extension. Only applicable to video.
+     * @param responseHandler A lambda that consumes the [InputStream] response body.
+     * @return [SubsonicResult.Success] with [Unit] on success.
+     * @return [SubsonicResult.Failure] if the request fails or [id] is invalid.
+     */
+    suspend fun stream(
+        id: String,
+        maxBitRate: Int? = null,
+        format: String? = null,
+        timeOffset: Int? = null,
+        size: String? = null,
+        estimateContentLength: Boolean? = null,
+        converted: Boolean? = null,
+        responseHandler: (InputStream) -> Unit
+    ): SubsonicResult<Unit> {
+        val params = mutableMapOf("id" to id)
+        maxBitRate?.let { params["maxBitRate"] = it.toString() }
+        format?.let { params["format"] = it }
+        timeOffset?.let { params["timeOffset"] = it.toString() }
+        size?.let { params["size"] = it }
+        estimateContentLength?.let { params["estimateContentLength"] = it.toString() }
+        converted?.let { params["converted"] = it.toString() }
+        return executor.executeStreaming("stream.view", params, responseHandler)
     }
 }
