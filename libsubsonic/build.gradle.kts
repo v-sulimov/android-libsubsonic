@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.maven.publish)
 }
 
@@ -11,6 +10,7 @@ android {
     defaultConfig {
         minSdk = 24
         lint.targetSdk = 36
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -35,11 +35,19 @@ android {
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+        jvmToolchain(jdkVersion = 11)
     }
 }
 
 dependencies {
+    implementation(libs.kotlinx.coroutines.core)
+
+    testImplementation(libs.kotlin.test.junit5)
+    testImplementation(libs.json)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 publishing {
@@ -48,14 +56,15 @@ publishing {
             create<MavenPublication>("release") {
                 groupId = "com.vsulimov"
                 artifactId = "libsubsonic"
-                version = "1.0.0"
+                version = "1.0.0-rc1"
 
                 from(components["release"])
 
                 pom {
                     packaging = "aar"
-                    name = "Subsonic"
+                    name = "libsubsonic"
                     description = "A lightweight Android library for interacting with the Subsonic API."
+                    url = "https://github.com/v-sulimov/android-libsubsonic"
                     licenses {
                         license {
                             name = "The MIT License (MIT)"
@@ -69,7 +78,9 @@ publishing {
                         }
                     }
                     scm {
-                        url = "https://git.vsulimov.com/android-libsubsonic.git"
+                        url = "https://github.com/v-sulimov/android-libsubsonic"
+                        connection = "scm:git:https://github.com/v-sulimov/android-libsubsonic.git"
+                        developerConnection = "scm:git:ssh://git@github.com/v-sulimov/android-libsubsonic.git"
                     }
                 }
             }
