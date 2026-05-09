@@ -5,6 +5,7 @@ import com.vsulimov.libsubsonic.data.result.error.SubsonicErrorCode
 import com.vsulimov.libsubsonic.url.SubsonicUrlBuilder
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 
@@ -33,7 +34,7 @@ class SubsonicRequestExecutorTest {
         assertTrue(result is SubsonicResult.Failure)
         assertEquals(SubsonicErrorCode.GENERIC_ERROR, result.error.code)
         assertTrue(result.error.message.contains("Credentials not set"))
-        assertTrue(!handlerCalled)
+        assertFalse(handlerCalled)
     }
 
     @Test
@@ -59,6 +60,6 @@ class SubsonicRequestExecutorTest {
 
         assertTrue(result is SubsonicResult.Failure)
         assertEquals(SubsonicErrorCode.GENERIC_ERROR, result.error.code)
-        assertTrue(!handlerCalled)
+        assertFalse(handlerCalled)
     }
 }

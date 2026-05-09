@@ -3,6 +3,7 @@ package com.vsulimov.libsubsonic.parser.browsing
 import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import org.json.JSONObject
 
 class GetTopSongsParserTest {
@@ -76,7 +77,7 @@ class GetTopSongsParserTest {
         val first = response.songs[0]
         assertEquals("1013", first.id)
         assertEquals("1008", first.parent)
-        assertEquals(false, first.isDir)
+        assertFalse(first.isDir)
         assertEquals("London Leatherboys", first.title)
         assertEquals("Balls To The Wall", first.album)
         assertEquals("Accept", first.artist)
@@ -90,7 +91,7 @@ class GetTopSongsParserTest {
         assertEquals(237, first.duration)
         assertEquals(192, first.bitRate)
         assertEquals("Accept/Balls To The Wall/Accept - London Leatherboys - 02.mp3", first.path)
-        assertEquals(false, first.isVideo)
+        assertFalse(first.isVideo)
         assertEquals("2004-11-27T17:22:37.000Z", first.created)
         assertEquals("411", first.albumId)
         assertEquals("278", first.artistId)

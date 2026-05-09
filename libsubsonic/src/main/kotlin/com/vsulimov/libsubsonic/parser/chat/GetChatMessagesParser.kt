@@ -12,20 +12,19 @@ import org.json.JSONObject
 internal object GetChatMessagesParser {
 
     /**
-     * Parses the "subsonic-response" object into a [ChatMessagesResponse].
+     * Parses the `subsonic-response` object into a [ChatMessagesResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [ChatMessagesResponse].
      */
     fun parse(json: JSONObject): ChatMessagesResponse {
-        val containerObj = json.optJSONObject("chatMessages")
-        val messages = containerObj?.parseList("chatMessage") { msgJson ->
+        val messages = json.optJSONObject("chatMessages")?.parseList("chatMessage") { msgJson ->
             ChatMessage(
                 username = msgJson.optString("username"),
                 time = msgJson.optLong("time"),
                 message = msgJson.optString("message")
             )
-        } ?: emptyList()
+        }.orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return ChatMessagesResponse(

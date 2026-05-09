@@ -12,15 +12,15 @@ import org.json.JSONObject
 internal object GetVideosParser {
 
     /**
-     * Parses the "subsonic-response" object into a [VideosResponse].
+     * Parses the `subsonic-response` object into a [VideosResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [VideosResponse].
      */
     fun parse(json: JSONObject): VideosResponse {
         val videos = json.optJSONObject("videos")
-            ?.parseList("video") { GetSongParser.parseSong(it) }
-            ?: emptyList()
+            ?.parseList("video", GetSongParser::parseSong)
+            .orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return VideosResponse(

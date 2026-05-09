@@ -13,19 +13,18 @@ import org.json.JSONObject
 internal object GetPlaylistParser {
 
     /**
-     * Parses the "subsonic-response" object into a [PlaylistResponse].
+     * Parses the `subsonic-response` object into a [PlaylistResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * If the `playlist` element is missing the response carries an empty placeholder [Playlist].
+     *
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [PlaylistResponse].
      */
     fun parse(json: JSONObject): PlaylistResponse {
-        val playlistObj = json.optJSONObject("playlist")
-        val playlist = if (playlistObj != null) {
-            val entries = playlistObj.parseList("entry") { GetSongParser.parseSong(it) }
-            GetPlaylistsParser.parsePlaylist(playlistObj).copy(entries = entries)
-        } else {
-            Playlist(id = "", name = "")
-        }
+        val playlist = json.optJSONObject("playlist")?.let { obj ->
+            val entries = obj.parseList("entry", GetSongParser::parseSong)
+            GetPlaylistsParser.parsePlaylist(obj).copy(entries = entries)
+        } ?: Playlist(id = "", name = "")
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return PlaylistResponse(

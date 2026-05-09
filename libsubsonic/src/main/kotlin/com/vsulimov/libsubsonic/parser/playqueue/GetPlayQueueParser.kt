@@ -3,6 +3,8 @@ package com.vsulimov.libsubsonic.parser.playqueue
 import com.vsulimov.libsubsonic.data.response.playqueue.PlayQueue
 import com.vsulimov.libsubsonic.data.response.playqueue.PlayQueueResponse
 import com.vsulimov.libsubsonic.parser.browsing.GetSongParser
+import com.vsulimov.libsubsonic.parser.optLongOrNull
+import com.vsulimov.libsubsonic.parser.optStringOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import com.vsulimov.libsubsonic.parser.parseList
 import org.json.JSONObject
@@ -13,24 +15,23 @@ import org.json.JSONObject
 internal object GetPlayQueueParser {
 
     /**
-     * Parses the "subsonic-response" object into a [PlayQueueResponse].
+     * Parses the `subsonic-response` object into a [PlayQueueResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * If the user has no saved play queue the `playQueue` element is absent and the response
+     * carries `playQueue = null`.
+     *
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [PlayQueueResponse].
      */
     fun parse(json: JSONObject): PlayQueueResponse {
-        val queueJson = json.optJSONObject("playQueue")
-        val playQueue = queueJson?.let {
-            val entries = it.parseList("entry") { entryJson ->
-                GetSongParser.parseSong(entryJson)
-            }
+        val playQueue = json.optJSONObject("playQueue")?.let { obj ->
             PlayQueue(
-                current = it.optString("current").ifEmpty { null },
-                position = if (it.has("position")) it.optLong("position") else null,
-                username = it.optString("username"),
-                changed = it.optString("changed"),
-                changedBy = it.optString("changedBy"),
-                entries = entries
+                current = obj.optStringOrNull("current"),
+                position = obj.optLongOrNull("position"),
+                username = obj.optString("username"),
+                changed = obj.optString("changed"),
+                changedBy = obj.optString("changedBy"),
+                entries = obj.parseList("entry", GetSongParser::parseSong)
             )
         }
 

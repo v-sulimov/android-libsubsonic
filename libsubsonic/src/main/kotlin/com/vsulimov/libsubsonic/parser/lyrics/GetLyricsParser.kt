@@ -2,6 +2,7 @@ package com.vsulimov.libsubsonic.parser.lyrics
 
 import com.vsulimov.libsubsonic.data.response.lyrics.Lyrics
 import com.vsulimov.libsubsonic.data.response.lyrics.LyricsResponse
+import com.vsulimov.libsubsonic.parser.optStringOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import org.json.JSONObject
 
@@ -11,22 +12,21 @@ import org.json.JSONObject
 internal object GetLyricsParser {
 
     /**
-     * Parses the "subsonic-response" object into a [LyricsResponse].
+     * Parses the `subsonic-response` object into a [LyricsResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * If the `lyrics` element is missing the response carries an empty [Lyrics].
+     *
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [LyricsResponse].
      */
     fun parse(json: JSONObject): LyricsResponse {
-        val lyricsObj = json.optJSONObject("lyrics")
-        val lyrics = if (lyricsObj != null) {
+        val lyrics = json.optJSONObject("lyrics")?.let { obj ->
             Lyrics(
-                artist = lyricsObj.optString("artist").ifEmpty { null },
-                title = lyricsObj.optString("title").ifEmpty { null },
-                value = lyricsObj.optString("value").ifEmpty { null }
+                artist = obj.optStringOrNull("artist"),
+                title = obj.optStringOrNull("title"),
+                value = obj.optStringOrNull("value")
             )
-        } else {
-            Lyrics()
-        }
+        } ?: Lyrics()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return LyricsResponse(

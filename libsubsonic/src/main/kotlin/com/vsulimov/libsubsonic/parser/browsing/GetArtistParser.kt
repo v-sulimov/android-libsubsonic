@@ -2,6 +2,8 @@ package com.vsulimov.libsubsonic.parser.browsing
 
 import com.vsulimov.libsubsonic.data.response.browsing.Artist
 import com.vsulimov.libsubsonic.data.response.browsing.ArtistResponse
+import com.vsulimov.libsubsonic.parser.optStringList
+import com.vsulimov.libsubsonic.parser.optStringOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import com.vsulimov.libsubsonic.parser.parseList
 import org.json.JSONObject
@@ -12,33 +14,27 @@ import org.json.JSONObject
 internal object GetArtistParser {
 
     /**
-     * Parses the "subsonic-response" object into an [ArtistResponse].
+     * Parses the `subsonic-response` object into an [ArtistResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * If the `artist` element is missing the response carries an empty placeholder [Artist].
+     *
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [ArtistResponse].
      */
     fun parse(json: JSONObject): ArtistResponse {
-        val artistObj = json.optJSONObject("artist")
-        val artist = if (artistObj != null) {
-            val albums = artistObj.parseList("album") { GetAlbumParser.parseAlbum(it) }
-            val roles = artistObj.optJSONArray("roles")?.let { array ->
-                (0 until array.length()).map { i -> array.getString(i) }
-            } ?: emptyList()
-
+        val artist = json.optJSONObject("artist")?.let { obj ->
             Artist(
-                id = artistObj.optString("id"),
-                name = artistObj.optString("name"),
-                coverArt = artistObj.optString("coverArt").ifEmpty { null },
-                albumCount = artistObj.optInt("albumCount", 0),
-                artistImageUrl = artistObj.optString("artistImageUrl").ifEmpty { null },
-                musicBrainzId = artistObj.optString("musicBrainzId").ifEmpty { null },
-                sortName = artistObj.optString("sortName").ifEmpty { null },
-                roles = roles,
-                albums = albums
+                id = obj.optString("id"),
+                name = obj.optString("name"),
+                albumCount = obj.optInt("albumCount", 0),
+                coverArt = obj.optStringOrNull("coverArt"),
+                artistImageUrl = obj.optStringOrNull("artistImageUrl"),
+                musicBrainzId = obj.optStringOrNull("musicBrainzId"),
+                sortName = obj.optStringOrNull("sortName"),
+                roles = obj.optStringList("roles"),
+                albums = obj.parseList("album", GetAlbumParser::parseAlbum)
             )
-        } else {
-            Artist(id = "", name = "")
-        }
+        } ?: Artist(id = "", name = "")
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return ArtistResponse(

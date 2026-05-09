@@ -2,19 +2,22 @@ package com.vsulimov.libsubsonic.parser.user
 
 import com.vsulimov.libsubsonic.data.response.user.User
 import com.vsulimov.libsubsonic.data.response.user.UserResponse
+import com.vsulimov.libsubsonic.parser.optStringOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import org.json.JSONObject
 
 /**
- * Parses the `getUser` response payload.
+ * Parses the `getUser` response payload and provides the shared [parseUser] helper used by
+ * [GetUsersParser].
  */
 internal object GetUserParser {
 
     /**
-     * Parses the "subsonic-response" object into a [UserResponse].
+     * Parses the `subsonic-response` object into a [UserResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [UserResponse].
+     * @throws org.json.JSONException If the `user` element is missing.
      */
     fun parse(json: JSONObject): UserResponse {
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
@@ -29,10 +32,9 @@ internal object GetUserParser {
     }
 
     /**
-     * Parses a single user JSON object into a [User].
+     * Parses a single `user` JSON object into a [User].
      *
-     * This function is shared with [GetUsersParser] which uses it to parse
-     * individual user entries from the `users` list.
+     * Shared with [GetUsersParser] for parsing each entry of the `users` list.
      *
      * @param userJson The JSON object representing a single user.
      * @return The parsed [User].
@@ -40,13 +42,13 @@ internal object GetUserParser {
     internal fun parseUser(userJson: JSONObject): User {
         val folderArray = userJson.optJSONArray("folder")
         val folders = if (folderArray != null) {
-            (0 until folderArray.length()).map { folderArray.getInt(it) }
+            (0 until folderArray.length()).map(folderArray::getInt)
         } else {
             emptyList()
         }
         return User(
             username = userJson.optString("username"),
-            email = userJson.optString("email").ifEmpty { null },
+            email = userJson.optStringOrNull("email"),
             scrobblingEnabled = userJson.optBoolean("scrobblingEnabled"),
             adminRole = userJson.optBoolean("adminRole"),
             settingsRole = userJson.optBoolean("settingsRole"),

@@ -2,19 +2,22 @@ package com.vsulimov.libsubsonic.parser.scan
 
 import com.vsulimov.libsubsonic.data.response.scan.ScanStatus
 import com.vsulimov.libsubsonic.data.response.scan.ScanStatusResponse
+import com.vsulimov.libsubsonic.parser.optLongOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import org.json.JSONObject
 
 /**
- * Parses the `getScanStatus` response payload.
+ * Parses the `getScanStatus` response payload and provides the shared [parseScanStatus]
+ * helper used by [StartScanParser].
  */
 internal object GetScanStatusParser {
 
     /**
-     * Parses the "subsonic-response" object into a [ScanStatusResponse].
+     * Parses the `subsonic-response` object into a [ScanStatusResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [ScanStatusResponse].
+     * @throws org.json.JSONException If the `scanStatus` element is missing.
      */
     fun parse(json: JSONObject): ScanStatusResponse {
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
@@ -29,15 +32,15 @@ internal object GetScanStatusParser {
     }
 
     /**
-     * Parses a scan status JSON object into a [ScanStatus].
+     * Parses a `scanStatus` JSON object into a [ScanStatus].
      *
-     * This function is shared with [StartScanParser] which uses the same response structure.
+     * Shared with [StartScanParser] since both endpoints return the same payload shape.
      *
      * @param scanJson The JSON object representing the scan status.
      * @return The parsed [ScanStatus].
      */
-    internal fun parseScanStatus(scanJson: JSONObject): ScanStatus = ScanStatus(
+    internal fun parseScanStatus(scanJson: JSONObject) = ScanStatus(
         scanning = scanJson.optBoolean("scanning"),
-        count = if (scanJson.has("count")) scanJson.optLong("count") else null
+        count = scanJson.optLongOrNull("count")
     )
 }

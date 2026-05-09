@@ -5,22 +5,16 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 
 /**
- * Represents an HTTP response whose body is available as a raw byte stream.
+ * An HTTP response whose body is exposed as a raw byte stream rather than buffered into memory.
  *
- * The [body] stream remains valid until [close] is called. The caller must
- * close this response when finished to release the underlying connection.
+ * The underlying connection is held open until [close] is called, so callers must always
+ * close this response (typically via `use { ... }`) once they have finished reading [body].
  *
- * @property body The response body as an [InputStream] for direct consumption.
- * @property connection The underlying HTTP connection, kept open until [close] is called.
+ * @property body The response body, available as an [InputStream] for direct consumption.
  */
-class StreamingHttpResponse internal constructor(
-    val body: InputStream,
-    private val connection: HttpURLConnection
-) : Closeable {
+internal class StreamingHttpResponse(val body: InputStream, private val connection: HttpURLConnection) : Closeable {
 
-    /**
-     * Closes the underlying HTTP connection and releases associated resources.
-     */
+    /** Disconnects the underlying [HttpURLConnection] and releases its resources. */
     override fun close() {
         connection.disconnect()
     }

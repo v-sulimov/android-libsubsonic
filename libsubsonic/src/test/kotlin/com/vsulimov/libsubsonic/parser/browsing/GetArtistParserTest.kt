@@ -3,6 +3,7 @@ package com.vsulimov.libsubsonic.parser.browsing
 import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.json.JSONObject
@@ -65,7 +66,7 @@ class GetArtistParserTest {
         assertEquals("Sempiternal", album.name)
         assertEquals(6, album.playCount)
         assertEquals(0, album.userRating)
-        assertEquals(false, album.isCompilation)
+        assertFalse(album.isCompilation)
         assertEquals("sempiternal", album.sortName)
         assertEquals("Bring Me The Horizon", album.displayArtist)
     }

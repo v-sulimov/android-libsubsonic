@@ -48,7 +48,6 @@ enum class SubsonicErrorCode(val code: Int) {
          * @param code The numeric error code from the server response.
          * @return The corresponding enum entry.
          */
-        fun fromCode(code: Int): SubsonicErrorCode =
-            entries.find { it.code == code } ?: GENERIC_ERROR
+        fun fromCode(code: Int): SubsonicErrorCode = entries.find { it.code == code } ?: GENERIC_ERROR
     }
 }

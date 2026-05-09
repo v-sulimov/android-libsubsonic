@@ -3,6 +3,7 @@ package com.vsulimov.libsubsonic.parser.browsing
 import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.json.JSONObject
@@ -79,7 +80,7 @@ class GetAlbumParserTest {
         val song = album.songs[0]
         assertEquals("song1", song.id)
         assertEquals("Can You Feel My Heart", song.title)
-        assertEquals(false, song.isDir)
+        assertFalse(song.isDir)
         assertEquals(227, song.duration)
         assertEquals(10, song.playCount)
         assertEquals("audio/mpeg", song.contentType)

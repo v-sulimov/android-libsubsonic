@@ -11,16 +11,15 @@ import org.json.JSONObject
 internal object GetUsersParser {
 
     /**
-     * Parses the "subsonic-response" object into a [UsersResponse].
+     * Parses the `subsonic-response` object into a [UsersResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [UsersResponse].
      */
     fun parse(json: JSONObject): UsersResponse {
-        val containerObj = json.optJSONObject("users")
-        val users = containerObj?.parseList("user") { userJson ->
-            GetUserParser.parseUser(userJson)
-        } ?: emptyList()
+        val users = json.optJSONObject("users")
+            ?.parseList("user", GetUserParser::parseUser)
+            .orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return UsersResponse(

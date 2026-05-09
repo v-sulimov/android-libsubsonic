@@ -13,15 +13,15 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 /**
- * Executes Subsonic API requests and maps responses to [SubsonicResult] values.
+ * Executes Subsonic API requests and maps every outcome to a [SubsonicResult].
  *
- * This component bridges the synchronous [HttpClient] with Kotlin coroutines by
- * performing blocking I/O on [Dispatchers.IO], building signed URLs, and delegating
- * JSON parsing to [SubsonicResponseParser].
+ * Bridges the synchronous [HttpClient] with Kotlin coroutines by running blocking I/O on
+ * [Dispatchers.IO], builds signed URLs via [SubsonicUrlBuilder] and delegates JSON envelope
+ * parsing to [SubsonicResponseParser].
  *
- * @property urlBuilder The utility used to construct signed URLs.
- * @property httpClient The HTTP client used to perform network requests.
- * @property responseParser The parser used to decode the Subsonic response envelope.
+ * @property urlBuilder Builds signed Subsonic API URLs.
+ * @property httpClient Performs the underlying GET requests.
+ * @property responseParser Decodes the standard `subsonic-response` envelope.
  */
 internal class SubsonicRequestExecutor(
     private val urlBuilder: SubsonicUrlBuilder,
@@ -32,110 +32,86 @@ internal class SubsonicRequestExecutor(
     /**
      * Executes a streaming GET request against the Subsonic API.
      *
-     * This method is main-safe. It suspends execution and performs blocking network I/O
-     * on [Dispatchers.IO]. The [responseHandler] receives the raw response body as an
-     * [InputStream] for direct consumption.
+     * Main-safe: suspends and runs blocking network I/O on [Dispatchers.IO]. The
+     * [responseHandler] receives the raw response body as an [InputStream] for direct
+     * consumption; the underlying connection is held open until the handler returns.
      *
-     * @param endpoint The API endpoint to call (e.g., "stream.view").
-     * @param params Optional single-value query parameters to append to the request.
-     * @param multiValueParams Optional multi-value query parameters where a single key maps to
-     *   a list of values, each appended as a separate query pair (e.g., `bitRate=128&bitRate=320`).
-     * @param responseHandler A suspend lambda that consumes the [InputStream] response body.
-     * @return A [SubsonicResult] representing success or failure.
+     * @param endpoint The API endpoint to call (e.g. `"stream.view"`).
+     * @param params Single-value query parameters to append to the request.
+     * @param multiValueParams Multi-value query parameters where one key maps to many values
+     *   (e.g. `bitRate=128&bitRate=320`).
+     * @param responseHandler Suspending lambda that consumes the response body stream.
+     * @return [SubsonicResult.Success] of [Unit] if the request and handler completed,
+     *   [SubsonicResult.Failure] otherwise.
      */
     suspend fun executeStreaming(
         endpoint: String,
         params: Map<String, String> = emptyMap(),
         multiValueParams: Map<String, List<String>> = emptyMap(),
         responseHandler: suspend (InputStream) -> Unit
-    ): SubsonicResult<Unit> = withContext(Dispatchers.IO) {
-        try {
-            val url = urlBuilder.buildUrl(endpoint, params, multiValueParams)
-            val request = GetRequest(url)
-            val networkResult = httpClient.openStreamingGetRequest(request)
-
-            networkResult.fold(
-                onSuccess = { response ->
-                    response.use { responseHandler(it.body) }
-                    SubsonicResult.Success(Unit)
-                },
-                onFailure = { exception ->
-                    SubsonicResult.Failure(
-                        SubsonicError(
-                            code = SubsonicErrorCode.GENERIC_ERROR,
-                            message = exception.message ?: "Network transport error"
-                        )
-                    )
-                }
-            )
-        } catch (e: IllegalStateException) {
-            SubsonicResult.Failure(
-                SubsonicError(
-                    code = SubsonicErrorCode.GENERIC_ERROR,
-                    message = e.message ?: "Configuration error"
-                )
-            )
-        } catch (e: Exception) {
-            SubsonicResult.Failure(
-                SubsonicError(
-                    code = SubsonicErrorCode.GENERIC_ERROR,
-                    message = e.message ?: "Unexpected client error"
-                )
-            )
-        }
+    ): SubsonicResult<Unit> = runRequest {
+        val url = urlBuilder.buildUrl(endpoint, params, multiValueParams)
+        httpClient.openStreamingGetRequest(GetRequest(url)).fold(
+            onSuccess = { response ->
+                response.use { responseHandler(it.body) }
+                SubsonicResult.Success(Unit)
+            },
+            onFailure = { networkFailure(it) }
+        )
     }
 
     /**
-     * Executes a GET request against the Subsonic API.
+     * Executes a GET request against the Subsonic API and parses the JSON response body.
      *
-     * This method is main-safe. It suspends execution and performs blocking network I/O
-     * on [Dispatchers.IO].
+     * Main-safe: suspends and runs blocking network I/O on [Dispatchers.IO].
      *
-     * @param endpoint The API endpoint to call (e.g., "ping").
-     * @param params Optional single-value query parameters to append to the request.
-     * @param multiValueParams Optional multi-value query parameters where a single key maps to
-     *   a list of values, each appended as a separate query pair (e.g., `songId=1&songId=2`).
-     * @param dataParser A lambda to extract the specific data from the JSON response.
-     * @return A [SubsonicResult] representing success or failure.
+     * @param endpoint The API endpoint to call (e.g. `"ping.view"`).
+     * @param params Single-value query parameters to append to the request.
+     * @param multiValueParams Multi-value query parameters where one key maps to many values
+     *   (e.g. `songId=1&songId=2`).
+     * @param dataParser Lambda that extracts the typed payload from the JSON response body.
+     * @return [SubsonicResult.Success] containing the parsed payload, or
+     *   [SubsonicResult.Failure] on network, HTTP, or parsing errors.
      */
     suspend fun <T> execute(
         endpoint: String,
         params: Map<String, String> = emptyMap(),
         multiValueParams: Map<String, List<String>> = emptyMap(),
         dataParser: (JSONObject) -> T
-    ): SubsonicResult<T> = withContext(Dispatchers.IO) {
-        try {
-            val url = urlBuilder.buildUrl(endpoint, params, multiValueParams)
-            val request = GetRequest(url)
-            val networkResult = httpClient.executeGetRequest(request)
-
-            networkResult.fold(
-                onSuccess = { response ->
-                    responseParser.parse(response.body, dataParser)
-                },
-                onFailure = { exception ->
-                    SubsonicResult.Failure(
-                        SubsonicError(
-                            code = SubsonicErrorCode.GENERIC_ERROR,
-                            message = exception.message ?: "Network transport error"
-                        )
-                    )
-                }
-            )
-        } catch (e: IllegalStateException) {
-            SubsonicResult.Failure(
-                SubsonicError(
-                    code = SubsonicErrorCode.GENERIC_ERROR,
-                    message = e.message ?: "Configuration error"
-                )
-            )
-        } catch (e: Exception) {
-            SubsonicResult.Failure(
-                SubsonicError(
-                    code = SubsonicErrorCode.GENERIC_ERROR,
-                    message = e.message ?: "Unexpected client error"
-                )
-            )
-        }
+    ): SubsonicResult<T> = runRequest {
+        val url = urlBuilder.buildUrl(endpoint, params, multiValueParams)
+        httpClient.executeGetRequest(GetRequest(url)).fold(
+            onSuccess = { response -> responseParser.parse(response.body, dataParser) },
+            onFailure = { networkFailure(it) }
+        )
     }
+
+    /**
+     * Runs [block] on [Dispatchers.IO] and converts unexpected exceptions into
+     * [SubsonicResult.Failure] so no exception ever escapes the executor.
+     */
+    private suspend fun <T> runRequest(block: suspend () -> SubsonicResult<T>): SubsonicResult<T> =
+        withContext(Dispatchers.IO) {
+            try {
+                block()
+            } catch (e: IllegalStateException) {
+                clientFailure(e, fallback = "Configuration error")
+            } catch (e: Exception) {
+                clientFailure(e, fallback = "Unexpected client error")
+            }
+        }
+
+    private fun networkFailure(cause: Throwable): SubsonicResult.Failure = SubsonicResult.Failure(
+        SubsonicError(
+            code = SubsonicErrorCode.GENERIC_ERROR,
+            message = cause.message ?: "Network transport error"
+        )
+    )
+
+    private fun clientFailure(cause: Throwable, fallback: String): SubsonicResult.Failure = SubsonicResult.Failure(
+        SubsonicError(
+            code = SubsonicErrorCode.GENERIC_ERROR,
+            message = cause.message ?: fallback
+        )
+    )
 }

@@ -1,56 +1,42 @@
 package com.vsulimov.libsubsonic.auth
 
-import com.vsulimov.libsubsonic.auth.SubsonicAuthenticator.Companion.SALT_BYTE_SIZE
 import com.vsulimov.libsubsonic.data.Constants.DEFAULT_API_VERSION
 import com.vsulimov.libsubsonic.data.Constants.DEFAULT_CLIENT_NAME
 import java.security.MessageDigest
 import java.security.SecureRandom
 
 /**
- * Generates Subsonic authentication parameters using the token-and-salt strategy.
+ * Generates Subsonic authentication parameters using the token-and-salt scheme.
  *
- * This implementation follows the Subsonic REST API guidelines, where the token (t)
- * is computed as the MD5 hash of the clear-text password concatenated with a random
- * salt (s). This prevents sending the password directly over the network.
+ * Following the Subsonic REST API guidelines, the token (`t`) is the MD5 hash of the
+ * clear-text password concatenated with a random salt (`s`). A fresh salt is generated
+ * for every request so the password is never transmitted and replay attacks are mitigated.
  *
- * @property username The Subsonic username, passed as the `u` parameter.
- * @property password The clear-text password, used locally to generate the MD5 token.
- * @property clientName The client identifier, passed as the `c` parameter.
- * @property apiVersion The Subsonic REST API version, passed as the `v` parameter.
+ * @property username The Subsonic username, sent as the `u` parameter.
+ * @property password The clear-text password, used locally to compute the MD5 token.
+ * @property clientName The client identifier, sent as the `c` parameter.
+ * @property apiVersion The Subsonic REST API version, sent as the `v` parameter.
  */
-class SubsonicAuthenticator(
+internal class SubsonicAuthenticator(
     private val username: String,
     private val password: String,
     private val clientName: String = DEFAULT_CLIENT_NAME,
     private val apiVersion: String = DEFAULT_API_VERSION
 ) {
 
-    /** Cryptographically strong random number generator used for salt generation. */
     private val secureRandom = SecureRandom()
 
     /**
-     * Internal configuration for hex string formatting.
-     * Configured to output lowercase hex without prefixes or delimiters.
-     */
-    private val hexFormat = HexFormat { upperCase = false }
-
-    /**
-     * Generates a set of authentication parameters for an API request.
+     * Generates a fresh set of authentication parameters for a single API request.
      *
-     * This should be called for every new request to ensure that a unique salt
-     * is used, which mitigates the risk of replay attacks.
+     * Must be invoked once per request so that each request carries a unique salt.
      *
-     * @return A [Map] containing the keys:
-     * - `u`: The username.
-     * - `s`: A unique, random salt.
-     * - `t`: The computed MD5 token.
-     * - `v`: The API version.
-     * - `c`: The client name.
+     * @return A map with the keys `u` (username), `s` (salt), `t` (MD5 token),
+     *   `v` (API version) and `c` (client name).
      */
     fun generateAuthParams(): Map<String, String> {
         val salt = generateRandomSalt()
         val token = calculateToken(password, salt)
-
         return mapOf(
             "u" to username,
             "s" to salt,
@@ -61,38 +47,31 @@ class SubsonicAuthenticator(
     }
 
     /**
-     * Generates a cryptographically secure random hex string to be used as a salt.
+     * Generates a cryptographically secure random salt encoded as a lowercase hex string.
      *
      * @return A lowercase hex string derived from [SALT_BYTE_SIZE] random bytes.
      */
     private fun generateRandomSalt(): String {
-        val byteArray = ByteArray(SALT_BYTE_SIZE)
-        secureRandom.nextBytes(byteArray)
-        return byteArray.toHexString(hexFormat)
+        val bytes = ByteArray(SALT_BYTE_SIZE)
+        secureRandom.nextBytes(bytes)
+        return bytes.toHexString()
     }
 
     /**
-     * Computes the Subsonic authentication token.
-     *
-     * The token is calculated by taking the MD5 digest of the string formed by
-     * appending the salt to the clear-text password.
+     * Computes the Subsonic authentication token as `md5(password + salt)`.
      *
      * @param password The clear-text password.
      * @param salt The unique salt generated for this request.
-     * @return A lowercase MD5 hex string representing the authentication token.
+     * @return The lowercase MD5 hex digest of the concatenated bytes.
      */
     private fun calculateToken(password: String, salt: String): String {
-        val messageDigest = MessageDigest.getInstance("MD5")
-        val input = password + salt
-        val hashBytes = messageDigest.digest(input.toByteArray(Charsets.UTF_8))
-        return hashBytes.toHexString(hexFormat)
+        val digest = MessageDigest.getInstance("MD5")
+        val bytes = digest.digest((password + salt).toByteArray(Charsets.UTF_8))
+        return bytes.toHexString()
     }
 
-    companion object {
-        /**
-         * The entropy size for salt generation.
-         * 4 bytes of entropy results in an 8-character hex string.
-         */
-        private const val SALT_BYTE_SIZE = 4
+    private companion object {
+        /** Salt entropy in bytes; 4 bytes encode to an 8-character hex string. */
+        const val SALT_BYTE_SIZE = 4
     }
 }

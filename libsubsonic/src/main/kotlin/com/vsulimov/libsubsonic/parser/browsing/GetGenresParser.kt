@@ -12,15 +12,13 @@ import org.json.JSONObject
 internal object GetGenresParser {
 
     /**
-     * Extracts genres and metadata from the "subsonic-response" object.
+     * Parses the `subsonic-response` object into a [GenresResponse].
      *
-     * @param json The "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [GenresResponse].
      */
     fun parse(json: JSONObject): GenresResponse {
-        val genres = json.optJSONObject("genres")
-            ?.parseList("genre") { parseGenre(it) }
-            ?: emptyList()
+        val genres = json.optJSONObject("genres")?.parseList("genre", ::parseGenre).orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return GenresResponse(
@@ -34,20 +32,17 @@ internal object GetGenresParser {
     }
 
     /**
-     * Parses a single genre JSON object into a [Genre].
+     * Parses a single `genre` JSON object into a [Genre].
      *
-     * Handles both "value" (older Subsonic format) and "name" (OpenSubsonic format) fields,
-     * preferring "value" when both are present.
+     * Tolerates both the legacy `value` field and the OpenSubsonic `name` field, preferring
+     * `value` when both are present.
      *
      * @param json The JSON object representing a genre.
      * @return The parsed [Genre].
      */
-    private fun parseGenre(json: JSONObject): Genre {
-        val value = json.optString("value").ifEmpty { json.optString("name") }
-        return Genre(
-            value = value,
-            songCount = json.optInt("songCount", 0),
-            albumCount = json.optInt("albumCount", 0)
-        )
-    }
+    private fun parseGenre(json: JSONObject) = Genre(
+        name = json.optString("value").ifEmpty { json.optString("name") },
+        songCount = json.optInt("songCount", 0),
+        albumCount = json.optInt("albumCount", 0)
+    )
 }

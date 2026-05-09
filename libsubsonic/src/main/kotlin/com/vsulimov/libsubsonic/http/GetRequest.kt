@@ -1,8 +1,8 @@
 package com.vsulimov.libsubsonic.http
 
 /**
- * Represents an HTTP GET request.
+ * A single HTTP GET request, identified by its fully qualified URL.
  *
- * @property url The fully qualified URL to send the request to.
+ * @property url The fully qualified URL (including query string) to send the request to.
  */
-data class GetRequest(val url: String)
+internal data class GetRequest(val url: String)

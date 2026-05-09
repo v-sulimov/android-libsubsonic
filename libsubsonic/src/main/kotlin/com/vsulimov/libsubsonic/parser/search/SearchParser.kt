@@ -9,21 +9,21 @@ import com.vsulimov.libsubsonic.parser.parseList
 import org.json.JSONObject
 
 /**
- * Parses the `search` response payload.
+ * Parses the `search3` response payload.
  */
 internal object SearchParser {
 
     /**
-     * Parses the "subsonic-response" object into a [SearchResponse].
+     * Parses the `subsonic-response` object into a [SearchResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [SearchResponse].
      */
     fun parse(json: JSONObject): SearchResponse {
         val container = json.optJSONObject("searchResult3")
-        val artists = container?.parseList("artist") { GetArtistsParser.parseSingleArtist(it) } ?: emptyList()
-        val albums = container?.parseList("album") { GetAlbumParser.parseAlbum(it) } ?: emptyList()
-        val songs = container?.parseList("song") { GetSongParser.parseSong(it) } ?: emptyList()
+        val artists = container?.parseList("artist", GetArtistsParser::parseSingleArtist).orEmpty()
+        val albums = container?.parseList("album", GetAlbumParser::parseAlbum).orEmpty()
+        val songs = container?.parseList("song", GetSongParser::parseSong).orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return SearchResponse(

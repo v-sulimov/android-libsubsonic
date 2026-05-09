@@ -7,8 +7,4 @@ package com.vsulimov.libsubsonic.data.response.lyrics
  * @property title The song title associated with the lyrics.
  * @property value The lyrics text content.
  */
-data class Lyrics(
-    val artist: String? = null,
-    val title: String? = null,
-    val value: String? = null
-)
+data class Lyrics(val artist: String? = null, val title: String? = null, val value: String? = null)

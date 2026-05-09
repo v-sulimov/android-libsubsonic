@@ -7,73 +7,46 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * Parses raw JSON responses into typed [SubsonicResult] instances.
+ * Parses raw Subsonic JSON response bodies into typed [SubsonicResult] values.
  *
- * This parser handles the standard "subsonic-response" envelope, detects API-level
- * failures (status="failed"), and delegates payload parsing to the provided lambda.
+ * Unwraps the standard `subsonic-response` envelope, intercepts API-level failures
+ * (`status="failed"`) into [SubsonicResult.Failure] and delegates payload parsing
+ * to the caller-supplied lambda.
  */
 internal class SubsonicResponseParser {
 
     /**
-     * Parses a raw JSON response string.
+     * Parses a raw JSON response body.
      *
-     * @param jsonString The raw response body from the server.
-     * @param parser A lambda that transforms the successful JSON payload into type [T].
-     * @return A [SubsonicResult] containing either the parsed data or an error.
+     * @param jsonString The raw response body received from the server.
+     * @param parser Lambda that converts the unwrapped `subsonic-response` JSON into [T].
+     * @return [SubsonicResult.Success] with the parsed payload on a successful envelope, or
+     *   [SubsonicResult.Failure] if the body is empty, malformed, missing the envelope, carries
+     *   `status="failed"`, or the parser lambda throws.
      */
     fun <T> parse(jsonString: String, parser: (JSONObject) -> T): SubsonicResult<T> {
+        if (jsonString.isBlank()) return genericFailure("Empty response received")
+
         return try {
-            if (jsonString.isBlank()) {
-                return SubsonicResult.Failure(
-                    SubsonicError(
-                        code = SubsonicErrorCode.GENERIC_ERROR,
-                        message = "Empty response received"
-                    )
-                )
-            }
+            val body = JSONObject(jsonString).optJSONObject("subsonic-response")
+                ?: return genericFailure("Invalid JSON: Missing 'subsonic-response' root")
 
-            val root = JSONObject(jsonString)
-
-            if (!root.has("subsonic-response")) {
-                return SubsonicResult.Failure(
-                    SubsonicError(
-                        code = SubsonicErrorCode.GENERIC_ERROR,
-                        message = "Invalid JSON: Missing 'subsonic-response' root"
-                    )
-                )
-            }
-
-            val body = root.getJSONObject("subsonic-response")
-            val status = body.optString("status")
-
-            if ("failed".equals(status, ignoreCase = true)) {
+            if ("failed".equals(body.optString("status"), ignoreCase = true)) {
                 return extractApiError(body)
             }
 
-            val data = parser(body)
-            SubsonicResult.Success(data)
+            SubsonicResult.Success(parser(body))
         } catch (e: JSONException) {
-            SubsonicResult.Failure(
-                SubsonicError(
-                    code = SubsonicErrorCode.GENERIC_ERROR,
-                    message = "JSON Parsing error: ${e.message}"
-                )
-            )
+            genericFailure("JSON parsing error: ${e.message}")
         } catch (e: Exception) {
-            SubsonicResult.Failure(
-                SubsonicError(
-                    code = SubsonicErrorCode.GENERIC_ERROR,
-                    message = "Unknown parsing error: ${e.message}"
-                )
-            )
+            genericFailure("Unknown parsing error: ${e.message}")
         }
     }
 
     /**
-     * Extracts the structured error object from a failed response.
-     *
-     * @param responseBody The "subsonic-response" JSON object.
-     * @return A [SubsonicResult.Failure] containing the error code and message.
+     * Builds a [SubsonicResult.Failure] from the `error` object in a failed response envelope,
+     * defaulting to [SubsonicErrorCode.GENERIC_ERROR] and a placeholder message when the server
+     * omits the field or supplies an empty value.
      */
     private fun extractApiError(responseBody: JSONObject): SubsonicResult.Failure {
         val errorObj = responseBody.optJSONObject("error")
@@ -81,4 +54,7 @@ internal class SubsonicResponseParser {
         val message = errorObj?.optString("message")?.takeIf { it.isNotEmpty() } ?: "Unknown API error"
         return SubsonicResult.Failure(SubsonicError(code, message))
     }
+
+    private fun genericFailure(message: String): SubsonicResult.Failure =
+        SubsonicResult.Failure(SubsonicError(SubsonicErrorCode.GENERIC_ERROR, message))
 }

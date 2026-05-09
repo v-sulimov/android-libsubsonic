@@ -12,15 +12,15 @@ import org.json.JSONObject
 internal object GetSongsByGenreParser {
 
     /**
-     * Parses the "subsonic-response" object into a [SongsByGenreResponse].
+     * Parses the `subsonic-response` object into a [SongsByGenreResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [SongsByGenreResponse].
      */
     fun parse(json: JSONObject): SongsByGenreResponse {
         val songs = json.optJSONObject("songsByGenre")
-            ?.parseList("song") { GetSongParser.parseSong(it) }
-            ?: emptyList()
+            ?.parseList("song", GetSongParser::parseSong)
+            .orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return SongsByGenreResponse(

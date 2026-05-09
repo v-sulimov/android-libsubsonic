@@ -9,7 +9,7 @@ package com.vsulimov.libsubsonic.data.response.podcast
  * @property title The title of the episode.
  * @property description The description of the episode.
  * @property publishDate The ISO 8601 timestamp indicating when the episode was published.
- * @property status The download status of the episode (e.g., "completed", "downloading", "error").
+ * @property status The download status of the episode.
  * @property parent The identifier of the parent directory.
  * @property isDir True if this item is a directory.
  * @property album The album name associated with this episode.
@@ -35,7 +35,7 @@ data class PodcastEpisode(
     val title: String,
     val description: String? = null,
     val publishDate: String? = null,
-    val status: String,
+    val status: PodcastStatus,
     val parent: String? = null,
     val isDir: Boolean = false,
     val album: String? = null,

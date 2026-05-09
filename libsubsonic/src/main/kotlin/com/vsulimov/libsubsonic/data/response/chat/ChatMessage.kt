@@ -7,8 +7,4 @@ package com.vsulimov.libsubsonic.data.response.chat
  * @property time The timestamp of the message in milliseconds since epoch.
  * @property message The message text.
  */
-data class ChatMessage(
-    val username: String,
-    val time: Long,
-    val message: String
-)
+data class ChatMessage(val username: String, val time: Long, val message: String)

@@ -2,6 +2,9 @@ package com.vsulimov.libsubsonic
 
 import com.vsulimov.libsubsonic.auth.encodePassword
 import com.vsulimov.libsubsonic.data.Constants.DEFAULT_CLIENT_NAME
+import com.vsulimov.libsubsonic.data.Constants.DEFAULT_CONNECT_TIMEOUT_MS
+import com.vsulimov.libsubsonic.data.Constants.DEFAULT_READ_TIMEOUT_MS
+import com.vsulimov.libsubsonic.data.response.StreamFormat
 import com.vsulimov.libsubsonic.data.response.annotation.Rating
 import com.vsulimov.libsubsonic.data.response.annotation.ScrobbleResponse
 import com.vsulimov.libsubsonic.data.response.annotation.SetRatingResponse
@@ -64,13 +67,12 @@ import com.vsulimov.libsubsonic.data.response.user.MaxBitRate
 import com.vsulimov.libsubsonic.data.response.user.UpdateUserResponse
 import com.vsulimov.libsubsonic.data.response.user.UserResponse
 import com.vsulimov.libsubsonic.data.response.user.UsersResponse
+import com.vsulimov.libsubsonic.data.response.video.CaptionsFormat
 import com.vsulimov.libsubsonic.data.response.video.VideoInfoResponse
 import com.vsulimov.libsubsonic.data.response.video.VideosResponse
 import com.vsulimov.libsubsonic.data.result.SubsonicResult
 import com.vsulimov.libsubsonic.executor.SubsonicRequestExecutor
 import com.vsulimov.libsubsonic.http.HttpClient
-import com.vsulimov.libsubsonic.http.HttpClient.Companion.DEFAULT_CONNECT_TIMEOUT_MS
-import com.vsulimov.libsubsonic.http.HttpClient.Companion.DEFAULT_READ_TIMEOUT_MS
 import com.vsulimov.libsubsonic.parser.annotation.ScrobbleParser
 import com.vsulimov.libsubsonic.parser.annotation.SetRatingParser
 import com.vsulimov.libsubsonic.parser.annotation.StarParser
@@ -217,8 +219,8 @@ class SubsonicClient(
         ifModifiedSince: Long? = null
     ): SubsonicResult<IndexesResponse> {
         val params = mutableMapOf<String, String>()
-        musicFolderId?.let { params["musicFolderId"] = it }
-        ifModifiedSince?.let { params["ifModifiedSince"] = it.toString() }
+        params.putIfPresent("musicFolderId", musicFolderId)
+        params.putIfPresent("ifModifiedSince", ifModifiedSince)
 
         return executor.execute("getIndexes.view", params) { jsonObject ->
             GetIndexesParser.parse(jsonObject)
@@ -267,7 +269,7 @@ class SubsonicClient(
      */
     suspend fun getArtists(musicFolderId: String? = null): SubsonicResult<ArtistsResponse> {
         val params = mutableMapOf<String, String>()
-        musicFolderId?.let { params["musicFolderId"] = it }
+        params.putIfPresent("musicFolderId", musicFolderId)
 
         return executor.execute("getArtists.view", params) { jsonObject ->
             GetArtistsParser.parse(jsonObject)
@@ -363,8 +365,8 @@ class SubsonicClient(
         includeNotPresent: Boolean? = null
     ): SubsonicResult<ArtistInfoResponse> {
         val params = mutableMapOf("id" to id)
-        count?.let { params["count"] = it.toString() }
-        includeNotPresent?.let { params["includeNotPresent"] = it.toString() }
+        params.putIfPresent("count", count)
+        params.putIfPresent("includeNotPresent", includeNotPresent)
         return executor.execute("getArtistInfo2.view", params) { jsonObject ->
             GetArtistInfoParser.parse(jsonObject)
         }
@@ -398,7 +400,7 @@ class SubsonicClient(
      */
     suspend fun getSimilarSongs(id: String, count: Int? = null): SubsonicResult<SimilarSongsResponse> {
         val params = mutableMapOf("id" to id)
-        count?.let { params["count"] = it.toString() }
+        params.putIfPresent("count", count)
         return executor.execute("getSimilarSongs2.view", params) { jsonObject ->
             GetSimilarSongsParser.parse(jsonObject)
         }
@@ -414,7 +416,7 @@ class SubsonicClient(
      */
     suspend fun getTopSongs(artistName: String, count: Int? = null): SubsonicResult<TopSongsResponse> {
         val params = mutableMapOf("artist" to artistName)
-        count?.let { params["count"] = it.toString() }
+        params.putIfPresent("count", count)
         return executor.execute("getTopSongs.view", params) { jsonObject ->
             GetTopSongsParser.parse(jsonObject)
         }
@@ -443,12 +445,12 @@ class SubsonicClient(
         musicFolderId: String? = null
     ): SubsonicResult<AlbumListResponse> {
         val params = mutableMapOf("type" to type.value)
-        size?.let { params["size"] = it.toString() }
-        offset?.let { params["offset"] = it.toString() }
-        fromYear?.let { params["fromYear"] = it.toString() }
-        toYear?.let { params["toYear"] = it.toString() }
-        genre?.let { params["genre"] = it }
-        musicFolderId?.let { params["musicFolderId"] = it }
+        params.putIfPresent("size", size)
+        params.putIfPresent("offset", offset)
+        params.putIfPresent("fromYear", fromYear)
+        params.putIfPresent("toYear", toYear)
+        params.putIfPresent("genre", genre)
+        params.putIfPresent("musicFolderId", musicFolderId)
         return executor.execute("getAlbumList2.view", params) { jsonObject ->
             GetAlbumListParser.parse(jsonObject)
         }
@@ -473,11 +475,11 @@ class SubsonicClient(
         musicFolderId: String? = null
     ): SubsonicResult<RandomSongsResponse> {
         val params = mutableMapOf<String, String>()
-        size?.let { params["size"] = it.toString() }
-        genre?.let { params["genre"] = it }
-        fromYear?.let { params["fromYear"] = it.toString() }
-        toYear?.let { params["toYear"] = it.toString() }
-        musicFolderId?.let { params["musicFolderId"] = it }
+        params.putIfPresent("size", size)
+        params.putIfPresent("genre", genre)
+        params.putIfPresent("fromYear", fromYear)
+        params.putIfPresent("toYear", toYear)
+        params.putIfPresent("musicFolderId", musicFolderId)
         return executor.execute("getRandomSongs.view", params) { jsonObject ->
             GetRandomSongsParser.parse(jsonObject)
         }
@@ -500,9 +502,9 @@ class SubsonicClient(
         musicFolderId: String? = null
     ): SubsonicResult<SongsByGenreResponse> {
         val params = mutableMapOf("genre" to genre)
-        count?.let { params["count"] = it.toString() }
-        offset?.let { params["offset"] = it.toString() }
-        musicFolderId?.let { params["musicFolderId"] = it }
+        params.putIfPresent("count", count)
+        params.putIfPresent("offset", offset)
+        params.putIfPresent("musicFolderId", musicFolderId)
         return executor.execute("getSongsByGenre.view", params) { jsonObject ->
             GetSongsByGenreParser.parse(jsonObject)
         }
@@ -515,7 +517,7 @@ class SubsonicClient(
      * @return [SubsonicResult.Failure] if the request fails.
      */
     suspend fun getNowPlaying(): SubsonicResult<NowPlayingResponse> =
-        executor.execute("getNowPlaying.view", emptyMap()) { jsonObject ->
+        executor.execute("getNowPlaying.view") { jsonObject ->
             GetNowPlayingParser.parse(jsonObject)
         }
 
@@ -528,7 +530,7 @@ class SubsonicClient(
      */
     suspend fun getStarred(musicFolderId: String? = null): SubsonicResult<StarredResponse> {
         val params = mutableMapOf<String, String>()
-        musicFolderId?.let { params["musicFolderId"] = it }
+        params.putIfPresent("musicFolderId", musicFolderId)
         return executor.execute("getStarred2.view", params) { jsonObject ->
             GetStarredParser.parse(jsonObject)
         }
@@ -559,13 +561,13 @@ class SubsonicClient(
         musicFolderId: String? = null
     ): SubsonicResult<SearchResponse> {
         val params = mutableMapOf("query" to query)
-        artistCount?.let { params["artistCount"] = it.toString() }
-        artistOffset?.let { params["artistOffset"] = it.toString() }
-        albumCount?.let { params["albumCount"] = it.toString() }
-        albumOffset?.let { params["albumOffset"] = it.toString() }
-        songCount?.let { params["songCount"] = it.toString() }
-        songOffset?.let { params["songOffset"] = it.toString() }
-        musicFolderId?.let { params["musicFolderId"] = it }
+        params.putIfPresent("artistCount", artistCount)
+        params.putIfPresent("artistOffset", artistOffset)
+        params.putIfPresent("albumCount", albumCount)
+        params.putIfPresent("albumOffset", albumOffset)
+        params.putIfPresent("songCount", songCount)
+        params.putIfPresent("songOffset", songOffset)
+        params.putIfPresent("musicFolderId", musicFolderId)
         return executor.execute("search3.view", params) { jsonObject ->
             SearchParser.parse(jsonObject)
         }
@@ -581,7 +583,7 @@ class SubsonicClient(
      */
     suspend fun getPlaylists(username: String? = null): SubsonicResult<PlaylistsResponse> {
         val params = mutableMapOf<String, String>()
-        username?.let { params["username"] = it }
+        params.putIfPresent("username", username)
         return executor.execute("getPlaylists.view", params) { jsonObject ->
             GetPlaylistsParser.parse(jsonObject)
         }
@@ -620,14 +622,13 @@ class SubsonicClient(
         songIds: List<String> = emptyList()
     ): SubsonicResult<PlaylistResponse> {
         val params = mutableMapOf<String, String>()
-        playlistId?.let { params["playlistId"] = it }
-        name?.let { params["name"] = it }
-        val multiValueParams = if (songIds.isNotEmpty()) {
-            mapOf("songId" to songIds)
-        } else {
-            emptyMap()
-        }
-        return executor.execute("createPlaylist.view", params, multiValueParams) { jsonObject ->
+        params.putIfPresent("playlistId", playlistId)
+        params.putIfPresent("name", name)
+        return executor.execute(
+            "createPlaylist.view",
+            params,
+            multiValueOf("songId" to songIds)
+        ) { jsonObject ->
             CreatePlaylistParser.parse(jsonObject)
         }
     }
@@ -658,16 +659,13 @@ class SubsonicClient(
         songIndexesToRemove: List<Int> = emptyList()
     ): SubsonicResult<UpdatePlaylistResponse> {
         val params = mutableMapOf("playlistId" to playlistId)
-        name?.let { params["name"] = it }
-        comment?.let { params["comment"] = it }
-        public?.let { params["public"] = it.toString() }
-        val multiValueParams = mutableMapOf<String, List<String>>()
-        if (songIdsToAdd.isNotEmpty()) {
-            multiValueParams["songIdToAdd"] = songIdsToAdd
-        }
-        if (songIndexesToRemove.isNotEmpty()) {
-            multiValueParams["songIndexToRemove"] = songIndexesToRemove.map { it.toString() }
-        }
+        params.putIfPresent("name", name)
+        params.putIfPresent("comment", comment)
+        params.putIfPresent("public", public)
+        val multiValueParams = multiValueOf(
+            "songIdToAdd" to songIdsToAdd,
+            "songIndexToRemove" to songIndexesToRemove.map { it.toString() }
+        )
         return executor.execute("updatePlaylist.view", params, multiValueParams) { jsonObject ->
             UpdatePlaylistParser.parse(jsonObject)
         }
@@ -695,7 +693,8 @@ class SubsonicClient(
      *
      * @param id The unique identifier of the file to stream.
      * @param maxBitRate If set, limits the stream bitrate to this value in kilobits per second.
-     * @param format The preferred target format (e.g. "mp3", "flac").
+     * @param format The target format. Use [StreamFormat.Raw] to skip server-side transcoding,
+     *   or [StreamFormat.Custom] to request a transcoder name configured on the server.
      * @param timeOffset Only applicable to video. Specifies where to start streaming, in seconds.
      * @param size Only applicable to video. The requested video size (e.g. "640x480").
      * @param estimateContentLength Only applicable to video. Whether the server should estimate the content length.
@@ -707,7 +706,7 @@ class SubsonicClient(
     suspend fun stream(
         id: String,
         maxBitRate: Int? = null,
-        format: String? = null,
+        format: StreamFormat? = null,
         timeOffset: Int? = null,
         size: String? = null,
         estimateContentLength: Boolean? = null,
@@ -715,13 +714,55 @@ class SubsonicClient(
         responseHandler: suspend (InputStream) -> Unit
     ): SubsonicResult<Unit> {
         val params = mutableMapOf("id" to id)
-        maxBitRate?.let { params["maxBitRate"] = it.toString() }
-        format?.let { params["format"] = it }
-        timeOffset?.let { params["timeOffset"] = it.toString() }
-        size?.let { params["size"] = it }
-        estimateContentLength?.let { params["estimateContentLength"] = it.toString() }
-        converted?.let { params["converted"] = it.toString() }
+        params.putIfPresent("maxBitRate", maxBitRate)
+        params.putIfPresent("format", format?.value)
+        params.putIfPresent("timeOffset", timeOffset)
+        params.putIfPresent("size", size)
+        params.putIfPresent("estimateContentLength", estimateContentLength)
+        params.putIfPresent("converted", converted)
         return executor.executeStreaming("stream.view", params, responseHandler = responseHandler)
+    }
+
+    /**
+     * Builds a fully signed `stream` URL ready to hand to a third-party media player such as
+     * ExoPlayer or `MediaPlayer`.
+     *
+     * The returned URL carries the full Subsonic authentication parameters, so the player can
+     * fetch it directly with no additional configuration. Each call generates a fresh salt and
+     * token, but previously issued URLs remain usable as long as the underlying credentials
+     * remain valid on the server.
+     *
+     * Parameter semantics match [stream] one-for-one — only the response handler is omitted,
+     * since the caller hands the URL to the player rather than consuming the bytes themselves.
+     *
+     * @param id The unique identifier of the file to stream.
+     * @param maxBitRate If set, limits the stream bitrate to this value in kilobits per second.
+     * @param format The target format. Use [StreamFormat.Raw] to skip server-side transcoding,
+     *   or [StreamFormat.Custom] to request a transcoder name configured on the server.
+     * @param timeOffset Only applicable to video. Specifies where to start streaming, in seconds.
+     * @param size Only applicable to video. The requested video size (e.g. "640x480").
+     * @param estimateContentLength Only applicable to video. Whether the server should estimate the content length.
+     * @param converted Navidrome extension. Only applicable to video.
+     * @return The fully qualified, URL-encoded `stream.view` URL.
+     * @throws IllegalStateException If [setCredentials] has not been called.
+     */
+    fun streamUrl(
+        id: String,
+        maxBitRate: Int? = null,
+        format: StreamFormat? = null,
+        timeOffset: Int? = null,
+        size: String? = null,
+        estimateContentLength: Boolean? = null,
+        converted: Boolean? = null
+    ): String {
+        val params = mutableMapOf("id" to id)
+        params.putIfPresent("maxBitRate", maxBitRate)
+        params.putIfPresent("format", format?.value)
+        params.putIfPresent("timeOffset", timeOffset)
+        params.putIfPresent("size", size)
+        params.putIfPresent("estimateContentLength", estimateContentLength)
+        params.putIfPresent("converted", converted)
+        return urlBuilder.buildUrl("stream.view", params)
     }
 
     /**
@@ -736,10 +777,7 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] with [Unit] on success.
      * @return [SubsonicResult.Failure] if the request fails or [id] is invalid.
      */
-    suspend fun download(
-        id: String,
-        responseHandler: suspend (InputStream) -> Unit
-    ): SubsonicResult<Unit> {
+    suspend fun download(id: String, responseHandler: suspend (InputStream) -> Unit): SubsonicResult<Unit> {
         val params = mapOf("id" to id)
         return executor.executeStreaming("download.view", params, responseHandler = responseHandler)
     }
@@ -765,12 +803,8 @@ class SubsonicClient(
         responseHandler: suspend (InputStream) -> Unit
     ): SubsonicResult<Unit> {
         val params = mutableMapOf("id" to id)
-        audioTrack?.let { params["audioTrack"] = it }
-        val multiValueParams = if (bitRates.isNotEmpty()) {
-            mapOf("bitRate" to bitRates.map { it.toString() })
-        } else {
-            emptyMap()
-        }
+        params.putIfPresent("audioTrack", audioTrack)
+        val multiValueParams = multiValueOf("bitRate" to bitRates.map { it.toString() })
         return executor.executeStreaming("hls.view", params, multiValueParams, responseHandler)
     }
 
@@ -781,18 +815,18 @@ class SubsonicClient(
      * The caller is responsible for reading and closing the stream within the lambda.
      *
      * @param id The unique identifier of the video.
-     * @param format Optional. The preferred captions format ("srt" or "vtt").
+     * @param format Optional. The preferred captions format. See [CaptionsFormat] for supported values.
      * @param responseHandler A suspend lambda that consumes the [InputStream] response body.
      * @return [SubsonicResult.Success] with [Unit] on success.
      * @return [SubsonicResult.Failure] if the request fails or [id] is invalid.
      */
     suspend fun getCaptions(
         id: String,
-        format: String? = null,
+        format: CaptionsFormat? = null,
         responseHandler: suspend (InputStream) -> Unit
     ): SubsonicResult<Unit> {
         val params = mutableMapOf("id" to id)
-        format?.let { params["format"] = it }
+        params.putIfPresent("format", format?.value)
         return executor.executeStreaming("getCaptions.view", params, responseHandler = responseHandler)
     }
 
@@ -814,7 +848,7 @@ class SubsonicClient(
         responseHandler: suspend (InputStream) -> Unit
     ): SubsonicResult<Unit> {
         val params = mutableMapOf("id" to id)
-        size?.let { params["size"] = it.toString() }
+        params.putIfPresent("size", size)
         return executor.executeStreaming("getCoverArt.view", params, responseHandler = responseHandler)
     }
 
@@ -826,13 +860,10 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] containing [LyricsResponse].
      * @return [SubsonicResult.Failure] if the request fails.
      */
-    suspend fun getLyrics(
-        artist: String? = null,
-        title: String? = null
-    ): SubsonicResult<LyricsResponse> {
+    suspend fun getLyrics(artist: String? = null, title: String? = null): SubsonicResult<LyricsResponse> {
         val params = mutableMapOf<String, String>()
-        artist?.let { params["artist"] = it }
-        title?.let { params["title"] = it }
+        params.putIfPresent("artist", artist)
+        params.putIfPresent("title", title)
         return executor.execute("getLyrics.view", params) { jsonObject ->
             GetLyricsParser.parse(jsonObject)
         }
@@ -849,10 +880,7 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] with [Unit] on success.
      * @return [SubsonicResult.Failure] if the request fails or [username] is invalid.
      */
-    suspend fun getAvatar(
-        username: String,
-        responseHandler: suspend (InputStream) -> Unit
-    ): SubsonicResult<Unit> {
+    suspend fun getAvatar(username: String, responseHandler: suspend (InputStream) -> Unit): SubsonicResult<Unit> {
         val params = mapOf("username" to username)
         return executor.executeStreaming("getAvatar.view", params, responseHandler = responseHandler)
     }
@@ -871,10 +899,11 @@ class SubsonicClient(
         albumIds: List<String> = emptyList(),
         artistIds: List<String> = emptyList()
     ): SubsonicResult<StarResponse> {
-        val multiValueParams = mutableMapOf<String, List<String>>()
-        if (ids.isNotEmpty()) multiValueParams["id"] = ids
-        if (albumIds.isNotEmpty()) multiValueParams["albumId"] = albumIds
-        if (artistIds.isNotEmpty()) multiValueParams["artistId"] = artistIds
+        val multiValueParams = multiValueOf(
+            "id" to ids,
+            "albumId" to albumIds,
+            "artistId" to artistIds
+        )
         return executor.execute("star.view", multiValueParams = multiValueParams) { jsonObject ->
             StarParser.parse(jsonObject)
         }
@@ -894,10 +923,11 @@ class SubsonicClient(
         albumIds: List<String> = emptyList(),
         artistIds: List<String> = emptyList()
     ): SubsonicResult<UnstarResponse> {
-        val multiValueParams = mutableMapOf<String, List<String>>()
-        if (ids.isNotEmpty()) multiValueParams["id"] = ids
-        if (albumIds.isNotEmpty()) multiValueParams["albumId"] = albumIds
-        if (artistIds.isNotEmpty()) multiValueParams["artistId"] = artistIds
+        val multiValueParams = multiValueOf(
+            "id" to ids,
+            "albumId" to albumIds,
+            "artistId" to artistIds
+        )
         return executor.execute("unstar.view", multiValueParams = multiValueParams) { jsonObject ->
             UnstarParser.parse(jsonObject)
         }
@@ -935,9 +965,11 @@ class SubsonicClient(
         submission: Boolean? = null
     ): SubsonicResult<ScrobbleResponse> {
         val params = mutableMapOf<String, String>()
-        submission?.let { params["submission"] = it.toString() }
-        val multiValueParams = mutableMapOf("id" to ids)
-        if (times.isNotEmpty()) multiValueParams["time"] = times.map { it.toString() }
+        params.putIfPresent("submission", submission)
+        val multiValueParams = multiValueOf(
+            "id" to ids,
+            "time" to times.map { it.toString() }
+        )
         return executor.execute("scrobble.view", params, multiValueParams) { jsonObject ->
             ScrobbleParser.parse(jsonObject)
         }
@@ -949,10 +981,9 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] containing [SharesResponse].
      * @return [SubsonicResult.Failure] if the request fails.
      */
-    suspend fun getShares(): SubsonicResult<SharesResponse> =
-        executor.execute("getShares.view") { jsonObject ->
-            GetSharesParser.parse(jsonObject)
-        }
+    suspend fun getShares(): SubsonicResult<SharesResponse> = executor.execute("getShares.view") { jsonObject ->
+        GetSharesParser.parse(jsonObject)
+    }
 
     /**
      * Creates a new share for one or more media files.
@@ -969,10 +1000,13 @@ class SubsonicClient(
         expires: Long? = null
     ): SubsonicResult<SharesResponse> {
         val params = mutableMapOf<String, String>()
-        description?.let { params["description"] = it }
-        expires?.let { params["expires"] = it.toString() }
-        val multiValueParams = mapOf("id" to ids)
-        return executor.execute("createShare.view", params, multiValueParams) { jsonObject ->
+        params.putIfPresent("description", description)
+        params.putIfPresent("expires", expires)
+        return executor.execute(
+            "createShare.view",
+            params,
+            multiValueOf("id" to ids)
+        ) { jsonObject ->
             GetSharesParser.parse(jsonObject)
         }
     }
@@ -992,8 +1026,8 @@ class SubsonicClient(
         expires: Long? = null
     ): SubsonicResult<UpdateShareResponse> {
         val params = mutableMapOf("id" to id)
-        description?.let { params["description"] = it }
-        expires?.let { params["expires"] = it.toString() }
+        params.putIfPresent("description", description)
+        params.putIfPresent("expires", expires)
         return executor.execute("updateShare.view", params) { jsonObject ->
             UpdateShareParser.parse(jsonObject)
         }
@@ -1021,13 +1055,10 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] containing [PodcastsResponse].
      * @return [SubsonicResult.Failure] if the request fails.
      */
-    suspend fun getPodcasts(
-        includeEpisodes: Boolean? = null,
-        id: String? = null
-    ): SubsonicResult<PodcastsResponse> {
+    suspend fun getPodcasts(includeEpisodes: Boolean? = null, id: String? = null): SubsonicResult<PodcastsResponse> {
         val params = mutableMapOf<String, String>()
-        includeEpisodes?.let { params["includeEpisodes"] = it.toString() }
-        id?.let { params["id"] = it }
+        params.putIfPresent("includeEpisodes", includeEpisodes)
+        params.putIfPresent("id", id)
         return executor.execute("getPodcasts.view", params) { jsonObject ->
             GetPodcastsParser.parse(jsonObject)
         }
@@ -1042,7 +1073,7 @@ class SubsonicClient(
      */
     suspend fun getNewestPodcasts(count: Int? = null): SubsonicResult<NewestPodcastsResponse> {
         val params = mutableMapOf<String, String>()
-        count?.let { params["count"] = it.toString() }
+        params.putIfPresent("count", count)
         return executor.execute("getNewestPodcasts.view", params) { jsonObject ->
             GetNewestPodcastsParser.parse(jsonObject)
         }
@@ -1137,11 +1168,14 @@ class SubsonicClient(
         gain: Double? = null
     ): SubsonicResult<JukeboxResponse> {
         val params = mutableMapOf("action" to action.value)
-        index?.let { params["index"] = it.toString() }
-        offset?.let { params["offset"] = it.toString() }
-        gain?.let { params["gain"] = it.toString() }
-        val multiValueParams = if (ids.isNotEmpty()) mapOf("id" to ids) else emptyMap()
-        return executor.execute("jukeboxControl.view", params, multiValueParams) { jsonObject ->
+        params.putIfPresent("index", index)
+        params.putIfPresent("offset", offset)
+        params.putIfPresent("gain", gain)
+        return executor.execute(
+            "jukeboxControl.view",
+            params,
+            multiValueOf("id" to ids)
+        ) { jsonObject ->
             JukeboxControlParser.parse(jsonObject)
         }
     }
@@ -1172,7 +1206,7 @@ class SubsonicClient(
         homePageUrl: String? = null
     ): SubsonicResult<CreateInternetRadioStationResponse> {
         val params = mutableMapOf("streamUrl" to streamUrl, "name" to name)
-        homePageUrl?.let { params["homepageUrl"] = it }
+        params.putIfPresent("homepageUrl", homePageUrl)
         return executor.execute("createInternetRadioStation.view", params) { jsonObject ->
             CreateInternetRadioStationParser.parse(jsonObject)
         }
@@ -1195,7 +1229,7 @@ class SubsonicClient(
         homePageUrl: String? = null
     ): SubsonicResult<UpdateInternetRadioStationResponse> {
         val params = mutableMapOf("id" to id, "streamUrl" to streamUrl, "name" to name)
-        homePageUrl?.let { params["homepageUrl"] = it }
+        params.putIfPresent("homepageUrl", homePageUrl)
         return executor.execute("updateInternetRadioStation.view", params) { jsonObject ->
             UpdateInternetRadioStationParser.parse(jsonObject)
         }
@@ -1224,7 +1258,7 @@ class SubsonicClient(
      */
     suspend fun getChatMessages(since: Long? = null): SubsonicResult<ChatMessagesResponse> {
         val params = mutableMapOf<String, String>()
-        since?.let { params["since"] = it.toString() }
+        params.putIfPresent("since", since)
         return executor.execute("getChatMessages.view", params) { jsonObject ->
             GetChatMessagesParser.parse(jsonObject)
         }
@@ -1264,10 +1298,8 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] containing [UsersResponse] on success.
      * @return [SubsonicResult.Failure] if the request fails.
      */
-    suspend fun getUsers(): SubsonicResult<UsersResponse> {
-        return executor.execute("getUsers.view") { jsonObject ->
-            GetUsersParser.parse(jsonObject)
-        }
+    suspend fun getUsers(): SubsonicResult<UsersResponse> = executor.execute("getUsers.view") { jsonObject ->
+        GetUsersParser.parse(jsonObject)
     }
 
     /**
@@ -1313,21 +1345,24 @@ class SubsonicClient(
         musicFolderIds: List<String> = emptyList()
     ): SubsonicResult<CreateUserResponse> {
         val params = mutableMapOf("username" to username, "password" to encodePassword(password), "email" to email)
-        ldapAuthenticated?.let { params["ldapAuthenticated"] = it.toString() }
-        adminRole?.let { params["adminRole"] = it.toString() }
-        settingsRole?.let { params["settingsRole"] = it.toString() }
-        streamRole?.let { params["streamRole"] = it.toString() }
-        jukeboxRole?.let { params["jukeboxRole"] = it.toString() }
-        downloadRole?.let { params["downloadRole"] = it.toString() }
-        uploadRole?.let { params["uploadRole"] = it.toString() }
-        playlistRole?.let { params["playlistRole"] = it.toString() }
-        coverArtRole?.let { params["coverArtRole"] = it.toString() }
-        commentRole?.let { params["commentRole"] = it.toString() }
-        podcastRole?.let { params["podcastRole"] = it.toString() }
-        shareRole?.let { params["shareRole"] = it.toString() }
-        videoConversionRole?.let { params["videoConversionRole"] = it.toString() }
-        val multiValueParams = if (musicFolderIds.isNotEmpty()) mapOf("musicFolderId" to musicFolderIds) else emptyMap()
-        return executor.execute("createUser.view", params, multiValueParams) { jsonObject ->
+        params.putIfPresent("ldapAuthenticated", ldapAuthenticated)
+        params.putIfPresent("adminRole", adminRole)
+        params.putIfPresent("settingsRole", settingsRole)
+        params.putIfPresent("streamRole", streamRole)
+        params.putIfPresent("jukeboxRole", jukeboxRole)
+        params.putIfPresent("downloadRole", downloadRole)
+        params.putIfPresent("uploadRole", uploadRole)
+        params.putIfPresent("playlistRole", playlistRole)
+        params.putIfPresent("coverArtRole", coverArtRole)
+        params.putIfPresent("commentRole", commentRole)
+        params.putIfPresent("podcastRole", podcastRole)
+        params.putIfPresent("shareRole", shareRole)
+        params.putIfPresent("videoConversionRole", videoConversionRole)
+        return executor.execute(
+            "createUser.view",
+            params,
+            multiValueOf("musicFolderId" to musicFolderIds)
+        ) { jsonObject ->
             CreateUserParser.parse(jsonObject)
         }
     }
@@ -1376,22 +1411,25 @@ class SubsonicClient(
     ): SubsonicResult<UpdateUserResponse> {
         val params = mutableMapOf("username" to username)
         password?.let { params["password"] = encodePassword(it) }
-        email?.let { params["email"] = it }
-        ldapAuthenticated?.let { params["ldapAuthenticated"] = it.toString() }
-        adminRole?.let { params["adminRole"] = it.toString() }
-        settingsRole?.let { params["settingsRole"] = it.toString() }
-        streamRole?.let { params["streamRole"] = it.toString() }
-        jukeboxRole?.let { params["jukeboxRole"] = it.toString() }
-        downloadRole?.let { params["downloadRole"] = it.toString() }
-        uploadRole?.let { params["uploadRole"] = it.toString() }
-        coverArtRole?.let { params["coverArtRole"] = it.toString() }
-        commentRole?.let { params["commentRole"] = it.toString() }
-        podcastRole?.let { params["podcastRole"] = it.toString() }
-        shareRole?.let { params["shareRole"] = it.toString() }
-        videoConversionRole?.let { params["videoConversionRole"] = it.toString() }
-        maxBitRate?.let { params["maxBitRate"] = it.value.toString() }
-        val multiValueParams = if (musicFolderIds.isNotEmpty()) mapOf("musicFolderId" to musicFolderIds) else emptyMap()
-        return executor.execute("updateUser.view", params, multiValueParams) { jsonObject ->
+        params.putIfPresent("email", email)
+        params.putIfPresent("ldapAuthenticated", ldapAuthenticated)
+        params.putIfPresent("adminRole", adminRole)
+        params.putIfPresent("settingsRole", settingsRole)
+        params.putIfPresent("streamRole", streamRole)
+        params.putIfPresent("jukeboxRole", jukeboxRole)
+        params.putIfPresent("downloadRole", downloadRole)
+        params.putIfPresent("uploadRole", uploadRole)
+        params.putIfPresent("coverArtRole", coverArtRole)
+        params.putIfPresent("commentRole", commentRole)
+        params.putIfPresent("podcastRole", podcastRole)
+        params.putIfPresent("shareRole", shareRole)
+        params.putIfPresent("videoConversionRole", videoConversionRole)
+        params.putIfPresent("maxBitRate", maxBitRate?.value)
+        return executor.execute(
+            "updateUser.view",
+            params,
+            multiValueOf("musicFolderId" to musicFolderIds)
+        ) { jsonObject ->
             UpdateUserParser.parse(jsonObject)
         }
     }
@@ -1431,11 +1469,10 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] containing [BookmarksResponse] on success.
      * @return [SubsonicResult.Failure] if the request fails.
      */
-    suspend fun getBookmarks(): SubsonicResult<BookmarksResponse> {
-        return executor.execute("getBookmarks.view") { jsonObject ->
+    suspend fun getBookmarks(): SubsonicResult<BookmarksResponse> =
+        executor.execute("getBookmarks.view") { jsonObject ->
             GetBookmarksParser.parse(jsonObject)
         }
-    }
 
     /**
      * Creates or updates a bookmark for the given media file.
@@ -1454,7 +1491,7 @@ class SubsonicClient(
         comment: String? = null
     ): SubsonicResult<CreateBookmarkResponse> {
         val params = mutableMapOf("id" to id, "position" to position.toString())
-        comment?.let { params["comment"] = it }
+        params.putIfPresent("comment", comment)
         return executor.execute("createBookmark.view", params) { jsonObject ->
             CreateBookmarkParser.parse(jsonObject)
         }
@@ -1482,11 +1519,10 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] containing [PlayQueueResponse] on success.
      * @return [SubsonicResult.Failure] if the request fails.
      */
-    suspend fun getPlayQueue(): SubsonicResult<PlayQueueResponse> {
-        return executor.execute("getPlayQueue.view") { jsonObject ->
+    suspend fun getPlayQueue(): SubsonicResult<PlayQueueResponse> =
+        executor.execute("getPlayQueue.view") { jsonObject ->
             GetPlayQueueParser.parse(jsonObject)
         }
-    }
 
     /**
      * Saves the play queue for the current user.
@@ -1503,10 +1539,13 @@ class SubsonicClient(
         position: Long? = null
     ): SubsonicResult<SavePlayQueueResponse> {
         val params = mutableMapOf<String, String>()
-        current?.let { params["current"] = it }
-        position?.let { params["position"] = it.toString() }
-        val multiValueParams = if (ids.isNotEmpty()) mapOf("id" to ids) else emptyMap()
-        return executor.execute("savePlayQueue.view", params, multiValueParams) { jsonObject ->
+        params.putIfPresent("current", current)
+        params.putIfPresent("position", position)
+        return executor.execute(
+            "savePlayQueue.view",
+            params,
+            multiValueOf("id" to ids)
+        ) { jsonObject ->
             SavePlayQueueParser.parse(jsonObject)
         }
     }
@@ -1517,11 +1556,10 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] containing [ScanStatusResponse] on success.
      * @return [SubsonicResult.Failure] if the request fails.
      */
-    suspend fun getScanStatus(): SubsonicResult<ScanStatusResponse> {
-        return executor.execute("getScanStatus.view") { jsonObject ->
+    suspend fun getScanStatus(): SubsonicResult<ScanStatusResponse> =
+        executor.execute("getScanStatus.view") { jsonObject ->
             GetScanStatusParser.parse(jsonObject)
         }
-    }
 
     /**
      * Initiates a rescan of the media library.
@@ -1529,9 +1567,38 @@ class SubsonicClient(
      * @return [SubsonicResult.Success] containing [ScanStatusResponse] on success.
      * @return [SubsonicResult.Failure] if the request fails.
      */
-    suspend fun startScan(): SubsonicResult<ScanStatusResponse> {
-        return executor.execute("startScan.view") { jsonObject ->
-            StartScanParser.parse(jsonObject)
+    suspend fun startScan(): SubsonicResult<ScanStatusResponse> = executor.execute("startScan.view") { jsonObject ->
+        StartScanParser.parse(jsonObject)
+    }
+
+    /**
+     * Adds a query-parameter entry under [key] only when [value] is non-`null`.
+     *
+     * The value is rendered with [Any.toString], which is identity for [String], the standard
+     * `"true"`/`"false"` form for [Boolean], the decimal form for `Int`/`Long`/`Double`, and so
+     * on — matching what the Subsonic server expects on the wire.
+     *
+     * @param key The query-parameter key.
+     * @param value The value to encode, or `null` to leave the map untouched.
+     */
+    private fun MutableMap<String, String>.putIfPresent(key: String, value: Any?) {
+        value?.let { this[key] = it.toString() }
+    }
+
+    /**
+     * Builds a multi-value parameter map from [pairs], skipping pairs whose value list is empty.
+     *
+     * Used by endpoints that accept repeated query keys (e.g. `id=1&id=2&id=3`); skipping empty
+     * lists ensures the URL builder does not emit `key=` with no value.
+     *
+     * @param pairs Pairs of query-parameter key to its value list.
+     * @return A map containing only the pairs with at least one value.
+     */
+    private fun multiValueOf(vararg pairs: Pair<String, List<String>>): Map<String, List<String>> {
+        val result = mutableMapOf<String, List<String>>()
+        for ((key, values) in pairs) {
+            if (values.isNotEmpty()) result[key] = values
         }
+        return result
     }
 }

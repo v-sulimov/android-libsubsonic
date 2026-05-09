@@ -37,4 +37,16 @@ object Constants {
      * that does not include an explicit version field.
      */
     const val DEFAULT_VERSION_FALLBACK = "Unknown"
+
+    /**
+     * Default connect timeout (15 seconds) applied to every Subsonic HTTP request
+     * when the caller does not override it on the [com.vsulimov.libsubsonic.SubsonicClient] constructor.
+     */
+    const val DEFAULT_CONNECT_TIMEOUT_MS = 15_000
+
+    /**
+     * Default read timeout (30 seconds) applied to every Subsonic HTTP request
+     * when the caller does not override it on the [com.vsulimov.libsubsonic.SubsonicClient] constructor.
+     */
+    const val DEFAULT_READ_TIMEOUT_MS = 30_000
 }

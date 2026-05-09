@@ -3,6 +3,7 @@ package com.vsulimov.libsubsonic.parser.browsing
 import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.json.JSONObject
@@ -75,7 +76,7 @@ class GetMusicDirectoryParserTest {
         assertEquals(731, child.duration)
         assertEquals("1vtfI276kzSA8UTjxjHCYP", child.artistId)
         assertEquals(3, child.songCount)
-        assertEquals(false, child.isVideo)
+        assertFalse(child.isVideo)
         assertEquals(5, child.playCount)
         assertEquals("album", child.mediaType)
         assertEquals("explicit", child.explicitStatus)

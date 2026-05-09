@@ -4,6 +4,7 @@ import com.vsulimov.libsubsonic.data.response.browsing.ArtistEntry
 import com.vsulimov.libsubsonic.data.response.browsing.Index
 import com.vsulimov.libsubsonic.data.response.browsing.IndexesResponse
 import com.vsulimov.libsubsonic.data.response.browsing.Shortcut
+import com.vsulimov.libsubsonic.parser.optStringOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import com.vsulimov.libsubsonic.parser.parseList
 import org.json.JSONObject
@@ -14,18 +15,18 @@ import org.json.JSONObject
 internal object GetIndexesParser {
 
     /**
-     * Parses the "subsonic-response" object into an [IndexesResponse].
+     * Parses the `subsonic-response` object into an [IndexesResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [IndexesResponse].
      */
     fun parse(json: JSONObject): IndexesResponse {
         val indexesObj = json.optJSONObject("indexes")
         val lastModified = indexesObj?.optLong("lastModified", 0L) ?: 0L
         val ignoredArticles = indexesObj?.optString("ignoredArticles", "") ?: ""
-        val shortcuts = indexesObj?.parseList("shortcut") { parseShortcut(it) } ?: emptyList()
-        val indexes = indexesObj?.parseList("index") { parseIndexObject(it) } ?: emptyList()
-        val children = indexesObj?.parseList("child") { GetSongParser.parseSong(it) } ?: emptyList()
+        val shortcuts = indexesObj?.parseList("shortcut", ::parseShortcut).orEmpty()
+        val indexes = indexesObj?.parseList("index", ::parseIndexObject).orEmpty()
+        val children = indexesObj?.parseList("child", GetSongParser::parseSong).orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return IndexesResponse(
@@ -42,40 +43,27 @@ internal object GetIndexesParser {
         )
     }
 
-    /**
-     * Parses a shortcut JSON object into a [Shortcut].
-     *
-     * @param json The JSON object representing a shortcut entry.
-     * @return The parsed [Shortcut].
-     */
-    private fun parseShortcut(json: JSONObject): Shortcut = Shortcut(
+    private fun parseShortcut(json: JSONObject) = Shortcut(
         id = json.optString("id"),
         name = json.optString("name")
     )
 
     /**
-     * Parses an index JSON object into an [Index].
+     * Parses an alphabetical index group into an [Index].
      *
-     * @param json The JSON object representing an alphabetical index group.
-     * @return The parsed [Index], or null if the index has no name.
+     * @param json The JSON object representing an index entry.
+     * @return The parsed [Index], or `null` if the index has no name.
      */
     private fun parseIndexObject(json: JSONObject): Index? {
         val name = json.optString("name").ifEmpty { return null }
-        val artists = json.parseList("artist") { parseArtist(it) }
-        return Index(name = name, artists = artists)
+        return Index(name = name, artists = json.parseList("artist", ::parseArtistEntry))
     }
 
-    /**
-     * Parses an artist entry within an index group into an [ArtistEntry].
-     *
-     * @param json The JSON object representing an artist entry.
-     * @return The parsed [ArtistEntry].
-     */
-    private fun parseArtist(json: JSONObject) = ArtistEntry(
+    private fun parseArtistEntry(json: JSONObject) = ArtistEntry(
         id = json.optString("id"),
         name = json.optString("name"),
-        coverArt = json.optString("coverArt").ifEmpty { null },
-        artistImageUrl = json.optString("artistImageUrl").ifEmpty { null },
-        starred = json.optString("starred").ifEmpty { null }
+        coverArt = json.optStringOrNull("coverArt"),
+        artistImageUrl = json.optStringOrNull("artistImageUrl"),
+        starred = json.optStringOrNull("starred")
     )
 }

@@ -1,6 +1,7 @@
 package com.vsulimov.libsubsonic.parser.podcast
 
 import com.vsulimov.libsubsonic.data.TestFixtures
+import com.vsulimov.libsubsonic.data.response.podcast.PodcastStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -69,7 +70,7 @@ class GetPodcastsParserTest {
         assertEquals("http://downloads.bbc.co.uk/podcasts/fivelive/drkarl/rss.xml", channel.url)
         assertEquals("Dr Karl and the Naked Scientist", channel.title)
         assertEquals("pod-1", channel.coverArt)
-        assertEquals("completed", channel.status)
+        assertEquals(PodcastStatus.COMPLETED, channel.status)
         assertEquals(1, channel.episodes.size)
 
         val episode = channel.episodes[0]
@@ -78,14 +79,14 @@ class GetPodcastsParserTest {
         assertEquals("1", episode.channelId)
         assertEquals("Scorpions have re-evolved eyes", episode.title)
         assertEquals("2011-02-03T14:46:43", episode.publishDate)
-        assertEquals("completed", episode.status)
+        assertEquals(PodcastStatus.COMPLETED, episode.status)
         assertEquals(3146, episode.duration)
         assertEquals(128, episode.bitRate)
         assertEquals("audio/mpeg", episode.contentType)
 
         val errorChannel = response.channels[1]
         assertEquals("3", errorChannel.id)
-        assertEquals("error", errorChannel.status)
+        assertEquals(PodcastStatus.ERROR, errorChannel.status)
         assertEquals("Not found.", errorChannel.errorMessage)
         assertEquals(emptyList(), errorChannel.episodes)
     }

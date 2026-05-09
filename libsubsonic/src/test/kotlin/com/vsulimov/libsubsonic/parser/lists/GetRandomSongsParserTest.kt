@@ -3,6 +3,7 @@ package com.vsulimov.libsubsonic.parser.lists
 import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import org.json.JSONObject
 
@@ -69,7 +70,7 @@ class GetRandomSongsParserTest {
         assertEquals("111", first.id)
         assertEquals("11", first.parent)
         assertEquals("Dancing Queen", first.title)
-        assertEquals(false, first.isDir)
+        assertFalse(first.isDir)
         assertEquals("Arrival", first.album)
         assertEquals("ABBA", first.artist)
         assertEquals(7, first.track)

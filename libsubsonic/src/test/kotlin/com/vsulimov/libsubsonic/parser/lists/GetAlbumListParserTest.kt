@@ -4,6 +4,7 @@ import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.json.JSONObject
 
 class GetAlbumListParserTest {
@@ -156,7 +157,7 @@ class GetAlbumListParserTest {
         assertEquals(2010, album.year)
         assertEquals("Pop", album.genre)
         assertEquals(42, album.playCount)
-        assertEquals(true, album.isCompilation)
+        assertTrue(album.isCompilation)
     }
 
     @Test

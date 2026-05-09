@@ -2,6 +2,7 @@ package com.vsulimov.libsubsonic.parser.browsing
 
 import com.vsulimov.libsubsonic.data.response.browsing.ArtistInfo
 import com.vsulimov.libsubsonic.data.response.browsing.ArtistInfoResponse
+import com.vsulimov.libsubsonic.parser.optStringOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import com.vsulimov.libsubsonic.parser.parseList
 import org.json.JSONObject
@@ -12,26 +13,25 @@ import org.json.JSONObject
 internal object GetArtistInfoParser {
 
     /**
-     * Parses the "subsonic-response" object into an [ArtistInfoResponse].
+     * Parses the `subsonic-response` object into an [ArtistInfoResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * If the `artistInfo2` element is missing the response carries an empty [ArtistInfo].
+     *
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [ArtistInfoResponse].
      */
     fun parse(json: JSONObject): ArtistInfoResponse {
-        val infoObj = json.optJSONObject("artistInfo2")
-        val artistInfo = if (infoObj != null) {
+        val artistInfo = json.optJSONObject("artistInfo2")?.let { obj ->
             ArtistInfo(
-                biography = infoObj.optString("biography").ifEmpty { null },
-                musicBrainzId = infoObj.optString("musicBrainzId").ifEmpty { null },
-                lastFmUrl = infoObj.optString("lastFmUrl").ifEmpty { null },
-                smallImageUrl = infoObj.optString("smallImageUrl").ifEmpty { null },
-                mediumImageUrl = infoObj.optString("mediumImageUrl").ifEmpty { null },
-                largeImageUrl = infoObj.optString("largeImageUrl").ifEmpty { null },
-                similarArtists = infoObj.parseList("similarArtist") { GetArtistsParser.parseSingleArtist(it) }
+                biography = obj.optStringOrNull("biography"),
+                musicBrainzId = obj.optStringOrNull("musicBrainzId"),
+                lastFmUrl = obj.optStringOrNull("lastFmUrl"),
+                smallImageUrl = obj.optStringOrNull("smallImageUrl"),
+                mediumImageUrl = obj.optStringOrNull("mediumImageUrl"),
+                largeImageUrl = obj.optStringOrNull("largeImageUrl"),
+                similarArtists = obj.parseList("similarArtist", GetArtistsParser::parseSingleArtist)
             )
-        } else {
-            ArtistInfo()
-        }
+        } ?: ArtistInfo()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return ArtistInfoResponse(

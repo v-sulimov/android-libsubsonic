@@ -2,6 +2,7 @@ package com.vsulimov.libsubsonic.parser.system
 
 import com.vsulimov.libsubsonic.data.response.system.License
 import com.vsulimov.libsubsonic.data.response.system.LicenseResponse
+import com.vsulimov.libsubsonic.parser.optStringOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import org.json.JSONObject
 
@@ -11,22 +12,21 @@ import org.json.JSONObject
 internal object GetLicenseParser {
 
     /**
-     * Parses the "subsonic-response" object into a [LicenseResponse].
+     * Parses the `subsonic-response` object into a [LicenseResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * If the `license` element is missing the response carries a default `License(valid = false)`.
+     *
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [LicenseResponse].
      */
     fun parse(json: JSONObject): LicenseResponse {
-        val licenseObj = json.optJSONObject("license")
-        val license = if (licenseObj != null) {
+        val license = json.optJSONObject("license")?.let { obj ->
             License(
-                valid = licenseObj.optBoolean("valid", false),
-                email = licenseObj.optString("email").ifEmpty { null },
-                licenseExpires = licenseObj.optString("licenseExpires").ifEmpty { null }
+                valid = obj.optBoolean("valid", false),
+                email = obj.optStringOrNull("email"),
+                licenseExpires = obj.optStringOrNull("licenseExpires")
             )
-        } else {
-            License(valid = false)
-        }
+        } ?: License(valid = false)
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return LicenseResponse(

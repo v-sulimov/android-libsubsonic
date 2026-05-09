@@ -9,8 +9,8 @@ package com.vsulimov.libsubsonic.data.response.podcast
  * @property description The description of the channel.
  * @property coverArt The identifier for the cover art.
  * @property originalImageUrl The original image URL from the RSS feed.
- * @property status The status of the channel (e.g., "completed", "error").
- * @property errorMessage The error message if the channel status is "error".
+ * @property status The download status of the channel.
+ * @property errorMessage The error message when [status] is [PodcastStatus.ERROR].
  * @property episodes The list of episodes in this channel.
  */
 data class PodcastChannel(
@@ -20,7 +20,7 @@ data class PodcastChannel(
     val description: String? = null,
     val coverArt: String? = null,
     val originalImageUrl: String? = null,
-    val status: String,
+    val status: PodcastStatus,
     val errorMessage: String? = null,
     val episodes: List<PodcastEpisode> = emptyList()
 )

@@ -30,10 +30,10 @@ class GetGenresParserTest {
 
         TestFixtures.assertNavidromeMetadata(response)
         assertEquals(expected = 2, actual = response.genres.size)
-        assertEquals(expected = "Rock", actual = response.genres[0].value)
+        assertEquals(expected = "Rock", actual = response.genres[0].name)
         assertEquals(expected = 89, actual = response.genres[0].songCount)
         assertEquals(expected = 12, actual = response.genres[0].albumCount)
-        assertEquals(expected = "Alternative Rock", actual = response.genres[1].value)
+        assertEquals(expected = "Alternative Rock", actual = response.genres[1].name)
     }
 
     @Test
@@ -53,7 +53,7 @@ class GetGenresParserTest {
         val response = GetGenresParser.parse(JSONObject(jsonString))
 
         assertEquals(expected = 2, actual = response.genres.size)
-        assertEquals(expected = "Electronic", actual = response.genres[0].value)
+        assertEquals(expected = "Electronic", actual = response.genres[0].name)
         assertEquals(expected = 28, actual = response.genres[0].songCount)
         assertEquals(expected = 6, actual = response.genres[0].albumCount)
     }
@@ -72,7 +72,7 @@ class GetGenresParserTest {
         val response = GetGenresParser.parse(JSONObject(jsonString))
 
         assertEquals(expected = 1, actual = response.genres.size)
-        assertEquals(expected = "Ambient", actual = response.genres[0].value)
+        assertEquals(expected = "Ambient", actual = response.genres[0].name)
     }
 
     @Test

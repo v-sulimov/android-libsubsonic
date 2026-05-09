@@ -3,6 +3,7 @@ package com.vsulimov.libsubsonic.parser.browsing
 import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import org.json.JSONObject
 
@@ -73,7 +74,7 @@ class GetSimilarSongsParserTest {
         val first = response.songs[0]
         assertEquals("1631", first.id)
         assertEquals("1628", first.parent)
-        assertEquals(false, first.isDir)
+        assertFalse(first.isDir)
         assertEquals("A Whiter Shade Of Pale", first.title)
         assertEquals("Medusa", first.album)
         assertEquals("Annie Lennox", first.artist)
@@ -85,7 +86,7 @@ class GetSimilarSongsParserTest {
         assertEquals(316, first.duration)
         assertEquals(128, first.bitRate)
         assertEquals("Annie Lennox/Medusa/03 - A Whiter Shade Of Pale.MP3", first.path)
-        assertEquals(false, first.isVideo)
+        assertFalse(first.isVideo)
         assertEquals("2004-11-08T22:21:17.000Z", first.created)
         assertEquals("471", first.albumId)
         assertEquals("305", first.artistId)

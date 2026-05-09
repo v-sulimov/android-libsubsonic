@@ -7,6 +7,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class SubsonicUrlBuilderTest {
@@ -55,7 +56,7 @@ class SubsonicUrlBuilderTest {
         val url = builder.buildUrl(endpoint = "ping")
 
         assertTrue(url.startsWith("http://test.subsonic.org/rest/ping"))
-        assertTrue(!url.contains("//rest/"))
+        assertFalse(url.contains("//rest/"))
     }
 
     @Test

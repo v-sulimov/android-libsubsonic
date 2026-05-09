@@ -47,9 +47,8 @@ object TestFixtures {
      * @param containerValue A JSON string for the container value (defaults to `{}`).
      * @return A [JSONObject] ready to pass directly to a parser.
      */
-    fun navidromeResponseJson(containerKey: String, containerValue: String = "{}"): JSONObject =
-        JSONObject(
-            """
+    fun navidromeResponseJson(containerKey: String, containerValue: String = "{}"): JSONObject = JSONObject(
+        """
             {
                 "status": "ok",
                 "version": "1.16.1",
@@ -58,8 +57,8 @@ object TestFixtures {
                 "openSubsonic": true,
                 "$containerKey": $containerValue
             }
-            """.trimIndent()
-        )
+        """.trimIndent()
+    )
 
     /**
      * Asserts that the given [response] contains the standard Navidrome server metadata.

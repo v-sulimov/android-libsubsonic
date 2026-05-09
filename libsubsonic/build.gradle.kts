@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.vsulimov.libsubsonic"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 24
@@ -56,7 +56,7 @@ publishing {
             create<MavenPublication>("release") {
                 groupId = "com.vsulimov"
                 artifactId = "libsubsonic"
-                version = "1.0.0-rc1"
+                version = "1.0.0-rc2"
 
                 from(components["release"])
 

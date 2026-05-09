@@ -3,6 +3,7 @@ package com.vsulimov.libsubsonic.parser.browsing
 import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -155,7 +156,7 @@ class GetSongParserTest {
 
         assertEquals("", response.song.id)
         assertEquals("", response.song.title)
-        assertEquals(false, response.song.isDir)
+        assertFalse(response.song.isDir)
         assertTrue(response.song.artists.isEmpty())
     }
 

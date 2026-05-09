@@ -1,28 +1,22 @@
 package com.vsulimov.libsubsonic.parser.system
 
 import com.vsulimov.libsubsonic.data.response.system.PingResponse
-import com.vsulimov.libsubsonic.parser.parseEnvelope
+import com.vsulimov.libsubsonic.parser.envelopeOnly
 import org.json.JSONObject
 
 /**
- * Parses a `ping` response payload into a [PingResponse].
+ * Parses the `ping` response payload.
+ *
+ * The server returns an empty envelope on success, so only the standard envelope fields
+ * are extracted.
  */
 internal object PingParser {
 
     /**
-     * Extracts ping metadata from the "subsonic-response" object.
+     * Parses the `subsonic-response` object into a [PingResponse].
      *
-     * @param json The "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [PingResponse].
      */
-    fun parse(json: JSONObject): PingResponse {
-        val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
-        return PingResponse(
-            status = status,
-            apiVersion = apiVersion,
-            serverType = serverType,
-            serverVersion = serverVersion,
-            isOpenSubsonic = isOpenSubsonic
-        )
-    }
+    fun parse(json: JSONObject): PingResponse = json.envelopeOnly(::PingResponse)
 }

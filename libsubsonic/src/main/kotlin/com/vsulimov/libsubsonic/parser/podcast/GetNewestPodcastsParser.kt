@@ -11,16 +11,15 @@ import org.json.JSONObject
 internal object GetNewestPodcastsParser {
 
     /**
-     * Parses the "subsonic-response" object into a [NewestPodcastsResponse].
+     * Parses the `subsonic-response` object into a [NewestPodcastsResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [NewestPodcastsResponse].
      */
     fun parse(json: JSONObject): NewestPodcastsResponse {
-        val newestPodcastsObj = json.optJSONObject("newestPodcasts")
-        val episodes = newestPodcastsObj?.parseList("episode") { episodeJson ->
-            GetPodcastsParser.parseEpisode(episodeJson)
-        } ?: emptyList()
+        val episodes = json.optJSONObject("newestPodcasts")
+            ?.parseList("episode", GetPodcastsParser::parseEpisode)
+            .orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return NewestPodcastsResponse(

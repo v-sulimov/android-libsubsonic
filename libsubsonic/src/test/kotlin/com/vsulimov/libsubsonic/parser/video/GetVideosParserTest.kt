@@ -3,6 +3,7 @@ package com.vsulimov.libsubsonic.parser.video
 import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.json.JSONObject
@@ -69,7 +70,7 @@ class GetVideosParserTest {
         assertEquals("7217", first.parent)
         assertEquals("Ringeren i Notre Dame", first.title)
         assertEquals("Barn", first.album)
-        assertEquals(false, first.isDir)
+        assertFalse(first.isDir)
         assertEquals("7217", first.coverArt)
         assertEquals("2011-04-15T11:47:20", first.created)
         assertEquals(5226, first.duration)

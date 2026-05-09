@@ -12,15 +12,15 @@ import org.json.JSONObject
 internal object GetMusicFoldersParser {
 
     /**
-     * Extracts music folders and metadata from the "subsonic-response" object.
+     * Parses the `subsonic-response` object into a [MusicFoldersResponse].
      *
-     * @param json The "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [MusicFoldersResponse].
      */
     fun parse(json: JSONObject): MusicFoldersResponse {
         val folders = json.optJSONObject("musicFolders")
             ?.parseList("musicFolder") { MusicFolder(id = it.optString("id"), name = it.optString("name")) }
-            ?: emptyList()
+            .orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return MusicFoldersResponse(

@@ -59,7 +59,7 @@ Add the dependency to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.vsulimov:libsubsonic:1.0.0-rc1")
+    implementation("com.vsulimov:libsubsonic:1.0.0-rc2")
 }
 ```
 
@@ -67,7 +67,7 @@ Or in Groovy `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation 'com.vsulimov:libsubsonic:1.0.0-rc1'
+    implementation 'com.vsulimov:libsubsonic:1.0.0-rc2'
 }
 ```
 
@@ -209,6 +209,20 @@ All streaming methods return `SubsonicResult<Unit>`. A `Success` result indicate
 the response handler ran without throwing. A `Failure` result indicates a network error or server error that occurred
 before the response body became available.
 
+### Streaming URLs for third-party media players
+
+For media players that accept a URL directly (such as ExoPlayer or `MediaPlayer`), use `streamUrl(...)` to build a fully
+signed `stream` URL without performing any I/O. The returned URL embeds the authentication parameters, so the player can
+fetch it as-is.
+
+```kotlin
+val url = client.streamUrl(id = "song-42", maxBitRate = 192, format = StreamFormat.Custom("mp3"))
+exoPlayer.setMediaItem(MediaItem.fromUri(url))
+```
+
+`streamUrl` mirrors `stream`'s parameter list (sans the response handler). It throws `IllegalStateException` if
+`setCredentials` has not been called.
+
 ---
 
 ## Password Encoding
@@ -228,12 +242,19 @@ encoding internally.
 Several API parameters accept only a predefined set of legal values. These are represented as Kotlin enums with a
 `value` property that holds the wire-format string or integer the API expects.
 
-| Enum            | Used by          | Values                                                                                                                                  |
-|-----------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| `AlbumListType` | `getAlbumList`   | `RANDOM`, `NEWEST`, `HIGHEST`, `FREQUENT`, `RECENT`, `STARRED`, `ALPHABETICAL_BY_NAME`, `ALPHABETICAL_BY_ARTIST`, `BY_YEAR`, `BY_GENRE` |
-| `Rating`        | `setRating`      | `REMOVE` (0), `ONE` through `FIVE` (1–5)                                                                                                |
-| `JukeboxAction` | `jukeboxControl` | `GET`, `STATUS`, `SET`, `START`, `STOP`, `SKIP`, `ADD`, `CLEAR`, `REMOVE`, `SHUFFLE`, `SET_GAIN`                                        |
-| `MaxBitRate`    | `updateUser`     | `NO_LIMIT`, `KBPS_32` through `KBPS_320`                                                                                                |
+| Enum             | Used by                                                  | Values                                                                                                                                  |
+|------------------|----------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| `AlbumListType`  | `getAlbumList`                                           | `RANDOM`, `NEWEST`, `FREQUENT`, `RECENT`, `STARRED`, `ALPHABETICAL_BY_NAME`, `ALPHABETICAL_BY_ARTIST`, `BY_YEAR`, `BY_GENRE`            |
+| `Rating`         | `setRating`                                              | `REMOVE` (0), `ONE` through `FIVE` (1–5)                                                                                                |
+| `JukeboxAction`  | `jukeboxControl`                                         | `GET`, `STATUS`, `SET`, `START`, `STOP`, `SKIP`, `ADD`, `CLEAR`, `REMOVE`, `SHUFFLE`, `SET_GAIN`                                        |
+| `MaxBitRate`     | `updateUser`                                             | `NO_LIMIT`, `KBPS_32` through `KBPS_320`                                                                                                |
+| `CaptionsFormat` | `getCaptions`                                            | `SRT`, `VTT`                                                                                                                            |
+| `PodcastStatus`  | `PodcastChannel.status`, `PodcastEpisode.status` (read)  | `NEW`, `DOWNLOADING`, `COMPLETED`, `ERROR`, `DELETED`, `SKIPPED`, `UNKNOWN`                                                              |
+
+For `stream`, the `format` parameter is a `StreamFormat` sealed class because legal values include
+the universal `Raw` (skip transcoding) plus any transcoder name configured on the server. Pass
+`StreamFormat.Raw` for the original file or `StreamFormat.Custom("mp3")` (or any other server-defined
+transcoder name) to request transcoding.
 
 ---
 

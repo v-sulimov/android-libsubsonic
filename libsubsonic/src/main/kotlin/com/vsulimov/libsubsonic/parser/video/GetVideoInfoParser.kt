@@ -5,6 +5,8 @@ import com.vsulimov.libsubsonic.data.response.video.Caption
 import com.vsulimov.libsubsonic.data.response.video.Conversion
 import com.vsulimov.libsubsonic.data.response.video.VideoInfo
 import com.vsulimov.libsubsonic.data.response.video.VideoInfoResponse
+import com.vsulimov.libsubsonic.parser.optIntOrNull
+import com.vsulimov.libsubsonic.parser.optStringOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import com.vsulimov.libsubsonic.parser.parseList
 import org.json.JSONObject
@@ -15,39 +17,22 @@ import org.json.JSONObject
 internal object GetVideoInfoParser {
 
     /**
-     * Parses the "subsonic-response" object into a [VideoInfoResponse].
+     * Parses the `subsonic-response` object into a [VideoInfoResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * If the `videoInfo` element is missing the response carries an empty placeholder [VideoInfo].
+     *
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [VideoInfoResponse].
      */
     fun parse(json: JSONObject): VideoInfoResponse {
-        val infoObj = json.optJSONObject("videoInfo")
-        val videoInfo = if (infoObj != null) {
+        val videoInfo = json.optJSONObject("videoInfo")?.let { obj ->
             VideoInfo(
-                id = infoObj.optString("id"),
-                captions = infoObj.parseList("captions") { obj ->
-                    Caption(
-                        id = obj.optString("id"),
-                        name = obj.optString("name")
-                    )
-                },
-                audioTracks = infoObj.parseList("audioTrack") { obj ->
-                    AudioTrack(
-                        id = obj.optString("id"),
-                        name = obj.optString("name"),
-                        languageCode = obj.optString("languageCode").ifEmpty { null }
-                    )
-                },
-                conversions = infoObj.parseList("conversion") { obj ->
-                    Conversion(
-                        id = obj.optString("id"),
-                        bitRate = if (obj.has("bitRate")) obj.optInt("bitRate") else null
-                    )
-                }
+                id = obj.optString("id"),
+                captions = obj.parseList("captions", ::parseCaption),
+                audioTracks = obj.parseList("audioTrack", ::parseAudioTrack),
+                conversions = obj.parseList("conversion", ::parseConversion)
             )
-        } else {
-            VideoInfo(id = "")
-        }
+        } ?: VideoInfo(id = "")
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return VideoInfoResponse(
@@ -59,4 +44,20 @@ internal object GetVideoInfoParser {
             videoInfo = videoInfo
         )
     }
+
+    private fun parseCaption(json: JSONObject) = Caption(
+        id = json.optString("id"),
+        name = json.optString("name")
+    )
+
+    private fun parseAudioTrack(json: JSONObject) = AudioTrack(
+        id = json.optString("id"),
+        name = json.optString("name"),
+        languageCode = json.optStringOrNull("languageCode")
+    )
+
+    private fun parseConversion(json: JSONObject) = Conversion(
+        id = json.optString("id"),
+        bitRate = json.optIntOrNull("bitRate")
+    )
 }

@@ -2,6 +2,7 @@ package com.vsulimov.libsubsonic.parser.browsing
 
 import com.vsulimov.libsubsonic.data.response.browsing.AlbumInfo
 import com.vsulimov.libsubsonic.data.response.browsing.AlbumInfoResponse
+import com.vsulimov.libsubsonic.parser.optStringOrNull
 import com.vsulimov.libsubsonic.parser.parseEnvelope
 import org.json.JSONObject
 
@@ -11,25 +12,24 @@ import org.json.JSONObject
 internal object GetAlbumInfoParser {
 
     /**
-     * Parses the "subsonic-response" object into an [AlbumInfoResponse].
+     * Parses the `subsonic-response` object into an [AlbumInfoResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * If the `albumInfo` element is missing the response carries an empty [AlbumInfo].
+     *
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [AlbumInfoResponse].
      */
     fun parse(json: JSONObject): AlbumInfoResponse {
-        val infoObj = json.optJSONObject("albumInfo")
-        val albumInfo = if (infoObj != null) {
+        val albumInfo = json.optJSONObject("albumInfo")?.let { obj ->
             AlbumInfo(
-                notes = infoObj.optString("notes").ifEmpty { null },
-                musicBrainzId = infoObj.optString("musicBrainzId").ifEmpty { null },
-                lastFmUrl = infoObj.optString("lastFmUrl").ifEmpty { null },
-                smallImageUrl = infoObj.optString("smallImageUrl").ifEmpty { null },
-                mediumImageUrl = infoObj.optString("mediumImageUrl").ifEmpty { null },
-                largeImageUrl = infoObj.optString("largeImageUrl").ifEmpty { null }
+                notes = obj.optStringOrNull("notes"),
+                musicBrainzId = obj.optStringOrNull("musicBrainzId"),
+                lastFmUrl = obj.optStringOrNull("lastFmUrl"),
+                smallImageUrl = obj.optStringOrNull("smallImageUrl"),
+                mediumImageUrl = obj.optStringOrNull("mediumImageUrl"),
+                largeImageUrl = obj.optStringOrNull("largeImageUrl")
             )
-        } else {
-            AlbumInfo()
-        }
+        } ?: AlbumInfo()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return AlbumInfoResponse(

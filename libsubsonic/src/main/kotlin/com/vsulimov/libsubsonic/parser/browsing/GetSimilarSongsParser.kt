@@ -11,15 +11,15 @@ import org.json.JSONObject
 internal object GetSimilarSongsParser {
 
     /**
-     * Parses the "subsonic-response" object into a [SimilarSongsResponse].
+     * Parses the `subsonic-response` object into a [SimilarSongsResponse].
      *
-     * @param json The root "subsonic-response" JSONObject.
+     * @param json The unwrapped `subsonic-response` JSON object.
      * @return The parsed [SimilarSongsResponse].
      */
     fun parse(json: JSONObject): SimilarSongsResponse {
         val songs = json.optJSONObject("similarSongs2")
-            ?.parseList("song") { GetSongParser.parseSong(it) }
-            ?: emptyList()
+            ?.parseList("song", GetSongParser::parseSong)
+            .orEmpty()
 
         val (status, apiVersion, serverType, serverVersion, isOpenSubsonic) = json.parseEnvelope()
         return SimilarSongsResponse(

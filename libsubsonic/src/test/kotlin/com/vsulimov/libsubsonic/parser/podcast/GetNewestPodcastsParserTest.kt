@@ -1,6 +1,7 @@
 package com.vsulimov.libsubsonic.parser.podcast
 
 import com.vsulimov.libsubsonic.data.TestFixtures
+import com.vsulimov.libsubsonic.data.response.podcast.PodcastStatus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -91,7 +92,7 @@ class GetNewestPodcastsParserTest {
         assertFalse(episode.isVideo)
         assertEquals("2015-09-07T20:07:31.000Z", episode.created)
         assertEquals("2015-09-07T15:29:00.000Z", episode.publishDate)
-        assertEquals("completed", episode.status)
+        assertEquals(PodcastStatus.COMPLETED, episode.status)
     }
 
     @Test

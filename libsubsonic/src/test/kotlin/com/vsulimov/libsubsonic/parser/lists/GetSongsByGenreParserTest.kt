@@ -3,6 +3,7 @@ package com.vsulimov.libsubsonic.parser.lists
 import com.vsulimov.libsubsonic.data.TestFixtures
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import org.json.JSONObject
 
 class GetSongsByGenreParserTest {
@@ -78,7 +79,7 @@ class GetSongsByGenreParserTest {
         assertEquals("Atrapado", first.title)
         assertEquals("Antígona", first.album)
         assertEquals("Antígona", first.artist)
-        assertEquals(false, first.isDir)
+        assertFalse(first.isDir)
         assertEquals("15", first.coverArt)
         assertEquals("2012-12-26T17:05:54", first.created)
         assertEquals(261, first.duration)
@@ -89,7 +90,7 @@ class GetSongsByGenreParserTest {
         assertEquals(4188288L, first.size)
         assertEquals("mp3", first.suffix)
         assertEquals("audio/mpeg", first.contentType)
-        assertEquals(false, first.isVideo)
+        assertFalse(first.isVideo)
         assertEquals("Antigona/Antigona/01 - Atrapado.mp3", first.path)
         assertEquals("2", first.albumId)
         assertEquals("2", first.artistId)
