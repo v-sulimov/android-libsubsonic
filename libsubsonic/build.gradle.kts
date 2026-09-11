@@ -1,6 +1,9 @@
+import org.gradle.api.tasks.bundling.Zip
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.maven.publish)
+    signing
 }
 
 android {
@@ -86,4 +89,29 @@ publishing {
             }
         }
     }
+
+    repositories {
+        maven {
+            name = "centralBundle"
+            url = uri(layout.buildDirectory.dir("central-staging").get().asFile)
+        }
+    }
+}
+
+signing {
+    useGpgCmd()
+
+    afterEvaluate {
+        sign(publishing.publications["release"])
+    }
+}
+
+tasks.register<Zip>("centralBundle") {
+    description = "Publish release publication to central-staging directory"
+    dependsOn("publishReleasePublicationToCentralBundleRepository")
+
+    from(layout.buildDirectory.dir("central-staging"))
+
+    archiveFileName.set("libsubsonic-central-bundle.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
 }

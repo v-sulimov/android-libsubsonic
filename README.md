@@ -21,6 +21,7 @@ consistent, type-safe interface that returns structured results.
 - [Enum Parameters](#enum-parameters)
 - [API Reference](docs/API_REFERENCE.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Publishing](#publishing)
 - [License](#license)
 
 ---
@@ -255,6 +256,28 @@ For `stream`, the `format` parameter is a `StreamFormat` sealed class because le
 the universal `Raw` (skip transcoding) plus any transcoder name configured on the server. Pass
 `StreamFormat.Raw` for the original file or `StreamFormat.Custom("mp3")` (or any other server-defined
 transcoder name) to request transcoding.
+
+---
+
+## Publishing
+
+Releases are published to [Maven Central](https://central.sonatype.com/) using Gradle's built-in Maven Publish and Signing plugins.
+
+To prepare a release for manual upload to Maven Central:
+
+```bash
+./gradlew clean build test
+./gradlew :libsubsonic:publishReleasePublicationToCentralBundleRepository
+./gradlew :libsubsonic:centralBundle
+```
+
+The resulting Maven Central bundle is created at:
+
+```text
+libsubsonic/build/distributions/libsubsonic-central-bundle.zip
+```
+
+Upload the bundle manually through the Maven Central Portal.
 
 ---
 
