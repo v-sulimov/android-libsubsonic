@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-09-11
+
+### Changed
+
+- Promoted `1.0.0-rc2` to the first stable release.
+- Updated the Android Gradle Plugin to version `9.4.0`.
+- Updated the Gradle wrapper to version `9.7.1`.
+- Updated the `targetSdk` to version `37`.
+- Updated JSON schema version to `20260814`.
+- Removed the Kotlin Android plugin configuration.
+
+### Build
+
+- Runtime requirements unchanged (`minSdk = 24`, JVM 11).
+
+
 ## [1.0.0-rc2] - 2026-05-09
 
 ### Added

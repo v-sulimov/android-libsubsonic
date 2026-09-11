@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         minSdk = 24
-        lint.targetSdk = 36
+        lint.targetSdk = 37
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -56,7 +56,7 @@ publishing {
             create<MavenPublication>("release") {
                 groupId = "com.vsulimov"
                 artifactId = "libsubsonic"
-                version = "1.0.0-rc2"
+                version = "1.0.0"
 
                 from(components["release"])
 

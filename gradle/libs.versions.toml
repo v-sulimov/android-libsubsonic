@@ -1,7 +1,6 @@
 [versions]
-agp = "9.2.1"
-json = "20251224"
-kotlin = "2.3.21"
+agp = "9.4.0"
+json = "20260814"
 kotlinx-coroutines-core = "1.11.0"
 
 [libraries]
@@ -11,5 +10,4 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 
 [plugins]
 android-library = { id = "com.android.library", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 maven-publish = { id = "maven-publish" }

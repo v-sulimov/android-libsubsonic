@@ -59,7 +59,7 @@ Add the dependency to your module's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.vsulimov:libsubsonic:1.0.0-rc2")
+    implementation("com.vsulimov:libsubsonic:1.0.0")
 }
 ```
 
@@ -67,7 +67,7 @@ Or in Groovy `build.gradle`:
 
 ```groovy
 dependencies {
-    implementation 'com.vsulimov:libsubsonic:1.0.0-rc2'
+    implementation 'com.vsulimov:libsubsonic:1.0.0'
 }
 ```
 
